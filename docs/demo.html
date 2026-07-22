@@ -51,29 +51,54 @@
           { id: 3, title: "Home projects" },
         ],
         labels: [
-          { id: 10, title: "Today" },
-          { id: 11, title: "Deep work" },
-          { id: 12, title: "Errands" },
-          { id: 13, title: "Waiting" },
+          { id: 10, title: "Today", color: "5f7fff" },
+          { id: 11, title: "Deep work", color: "8b3dff" },
+          { id: 12, title: "Errands", color: "24a9ff" },
+          { id: 13, title: "Waiting", color: "f59e0b" },
         ],
         tasks: [
-          { id: 108, project_id: 2, title: "Publish the launch checklist", description: "Review the final checklist and share it with the team.", created: "2026-07-21T14:20:00Z", due: "2026-07-24T00:00:00Z", done: false, labels: [10, 11], attachments: [{ id: 1, name: "launch-checklist.pdf", size: 284672 }] },
-          { id: 107, project_id: 3, title: "Photograph the garden layout", description: "Capture wide and detail photos before moving the planters.", created: "2026-07-21T13:10:00Z", due: null, done: false, labels: [10], attachments: [] },
-          { id: 106, project_id: 1, title: "Plan weekend meal prep", description: "Choose three recipes and prepare a shopping list.", created: "2026-07-21T11:45:00Z", due: "2026-07-25T00:00:00Z", done: false, labels: [12], attachments: [] },
-          { id: 105, project_id: 2, title: "Draft release announcement", description: "Summarize the highlights in clear, friendly language.", created: "2026-07-20T19:30:00Z", due: null, done: false, labels: [11], attachments: [] },
-          { id: 104, project_id: 3, title: "Replace the air filter", description: "Use the spare filter stored with the household supplies.", created: "2026-07-20T16:00:00Z", due: null, done: false, labels: [12], attachments: [] },
-          { id: 103, project_id: 2, title: "Collect design feedback", description: "Waiting for the last review comments.", created: "2026-07-19T18:05:00Z", due: null, done: false, labels: [13], attachments: [] },
-          { id: 102, project_id: 1, title: "Archive monthly receipts", description: "Receipts are filed and the digital copies are organized.", created: "2026-07-18T12:15:00Z", due: null, done: true, labels: [12], attachments: [] },
-          { id: 101, project_id: 2, title: "Create project workspace", description: "Initial project structure completed.", created: "2026-07-17T09:00:00Z", due: null, done: true, labels: [11], attachments: [] },
+          { id: 108, project_id: 2, title: "Publish the launch checklist", description: "Review the final checklist and share it with the team.", created: "2030-04-10T14:20:00Z", due: "2030-04-15T00:00:00Z", done: false, labels: [10, 11], attachments: [{ id: 1, name: "sample-checklist.pdf", size: 284672 }], priority: 4, percent_done: 0.65, hex_color: "6d5dfc", comment_count: 2, repeat_after: 1, repeat_mode: 1 },
+          { id: 107, project_id: 3, title: "Photograph the garden layout", description: "Capture wide and detail photos before moving the planters.", created: "2030-04-09T13:10:00Z", due: null, done: false, labels: [10], attachments: [], priority: 2, percent_done: 0.25, hex_color: "24a9ff", comment_count: 0, repeat_after: 0, repeat_mode: 0 },
+          { id: 106, project_id: 1, title: "Plan weekend meal prep", description: "Choose three recipes and prepare a shopping list.", created: "2030-04-08T11:45:00Z", due: "2030-04-16T00:00:00Z", done: false, labels: [12], attachments: [], priority: 1, percent_done: 0, hex_color: "", comment_count: 1, repeat_after: 0, repeat_mode: 0 },
+          { id: 105, project_id: 2, title: "Draft release announcement", description: "Summarize the highlights in clear, friendly language.", created: "2030-04-07T19:30:00Z", due: null, done: false, labels: [11], attachments: [], priority: 3, percent_done: 0.4, hex_color: "8b3dff", comment_count: 0, repeat_after: 0, repeat_mode: 0 },
+          { id: 104, project_id: 3, title: "Replace the air filter", description: "Use the spare filter stored with the household supplies.", created: "2030-04-06T16:00:00Z", due: null, done: false, labels: [12], attachments: [], priority: 0, percent_done: 0, hex_color: "", comment_count: 0, repeat_after: 30, repeat_mode: 0 },
+          { id: 103, project_id: 2, title: "Collect design feedback", description: "Waiting for the last review comments.", created: "2030-04-05T18:05:00Z", due: null, done: false, labels: [13], attachments: [], priority: 2, percent_done: 0.8, hex_color: "f59e0b", comment_count: 3, repeat_after: 0, repeat_mode: 0 },
+          { id: 102, project_id: 1, title: "Archive monthly receipts", description: "Receipts are filed and the digital copies are organized.", created: "2030-04-04T12:15:00Z", due: null, done: true, labels: [12], attachments: [], priority: 0, percent_done: 1, hex_color: "", comment_count: 0, repeat_after: 0, repeat_mode: 0 },
+          { id: 101, project_id: 2, title: "Create project workspace", description: "Initial project structure completed.", created: "2030-04-03T09:00:00Z", due: null, done: true, labels: [11], attachments: [], priority: 0, percent_done: 1, hex_color: "", comment_count: 0, repeat_after: 0, repeat_mode: 0 },
         ],
+        time_tracking: {
+          "108": { state: "active", elapsed: 754, note: "Reviewed accessibility and final checklist items.", scheduled_actions: [
+            { id: "sample-pause", action: "pause", at: "2030-04-15T15:30:00Z" },
+            { id: "sample-stop", action: "stop", at: "2030-04-15T16:00:00Z" },
+          ] },
+        },
       };
       await customElements.whenDefined("vikunja-todo-card");
       const card = document.querySelector("vikunja-todo-card");
-      card._hass = { callWS: async () => structuredClone(demoData) };
+      card._hass = { locale: { language: "en" }, callWS: async () => structuredClone(demoData) };
       card._data = structuredClone(demoData);
       card._selectedProject = "all";
       card._selectedLabel = "all";
+      card._vikunjaUrl = "https://example.com/vikunja";
+      card._comments.set(108, [
+        { id: 1, author: "Sample user", comment: "Checklist copy is ready for review.", created: "2030-04-12T14:20:00Z" },
+        { id: 2, author: "Demo teammate", comment: "Accessibility pass completed.", created: "2030-04-12T15:05:00Z" },
+      ]);
+      const view = new URLSearchParams(location.search).get("view") || "overview";
+      if (view === "bulk") {
+        card._selectedTasks.add(108);
+        card._selectedTasks.add(105);
+      }
+      if (view === "timer") card._openTimers.add(108);
+      if (view === "comments") card._openComments.add(108);
+      if (view === "editor" || view === "editor-comments") card._editingTask = demoData.tasks[0];
       card._render();
+      if (view === "editor-comments") {
+        requestAnimationFrame(() => {
+          const modal = card.shadowRoot.querySelector(".dialog");
+          if (modal) modal.scrollTop = modal.scrollHeight;
+        });
+      }
       window.demoCard = card;
     </script>
   </body>

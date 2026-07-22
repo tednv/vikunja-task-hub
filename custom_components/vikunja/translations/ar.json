@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ربط Vikunja Task Hub",
+        "description": "اربط Home Assistant بمثيل Vikunja لإدارة المهام مباشرة من لوحة المعلومات.",
+        "data": {
+          "url": "عنوان URL لمثيل Vikunja",
+          "api_key": "مفتاح API لـ Vikunja",
+          "strict_ssl": "تحقق SSL الصارم"
+        }
+      },
+      "reconfigure": {
+        "title": "إعادة تهيئة Vikunja Task Hub",
+        "description": "حدّث اتصال Vikunja الذي تستخدمه بطاقة لوحة المعلومات.",
+        "data": {
+          "url": "عنوان URL لمثيل Vikunja",
+          "api_key": "مفتاح API لـ Vikunja",
+          "strict_ssl": "تحقق SSL الصارم"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "تم تحديث إعدادات الاتصال بنجاح."
+    },
+    "error": {
+      "cannot_connect": "تعذر الاتصال بواجهة Vikunja API."
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "เชื่อมต่อ Vikunja Task Hub",
+        "description": "เชื่อมต่อ Home Assistant กับอินสแตนซ์ Vikunja เพื่อจัดการงานโดยตรงจากแดชบอร์ด",
+        "data": {
+          "url": "URL อินสแตนซ์ Vikunja",
+          "api_key": "คีย์ API ของ Vikunja",
+          "strict_ssl": "ตรวจสอบ SSL อย่างเข้มงวด"
+        }
+      },
+      "reconfigure": {
+        "title": "กำหนดค่า Vikunja Task Hub ใหม่",
+        "description": "อัปเดตการเชื่อมต่อ Vikunja ที่การ์ดแดชบอร์ดใช้",
+        "data": {
+          "url": "URL อินสแตนซ์ Vikunja",
+          "api_key": "คีย์ API ของ Vikunja",
+          "strict_ssl": "ตรวจสอบ SSL อย่างเข้มงวด"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "อัปเดตการตั้งค่าการเชื่อมต่อแล้ว"
+    },
+    "error": {
+      "cannot_connect": "ไม่สามารถเชื่อมต่อกับ API ของ Vikunja ได้"
+    }
+  }
+}

@@ -1,7 +1,7 @@
 # Vikunja Task Hub
 
 <p align="center">
-  <a href="https://buymeacoffee.com/tednv"><img src="https://img.shields.io/badge/%F0%9F%A4%96_Buy_me_some_ChatGPT_Credits-5F7FFF?style=for-the-badge&logo=buymeacoffee&logoColor=FFDD00" alt="Buy me some ChatGPT Credits"></a>
+  <a href="https://buymeacoffee.com/tednv"><img src="https://img.shields.io/badge/%F0%9F%A4%96_Buy_me_some_LLM_tokens-5F7FFF?style=for-the-badge&logo=buymeacoffee&logoColor=FFDD00" alt="Buy me some LLM tokens"></a>
 </p>
 
 ![Vikunja Task Hub](assets/vikunja-task-hub-banner.png)
@@ -15,27 +15,37 @@ Its responsive workspace brings together projects, categories, active and comple
 
 ## See it in action
 
-![Vikunja Task Hub showing recurring tasks, project and category selectors, title search, and footer links](assets/screenshots/task-hub-overview-v2.png)
+![Synthetic Vikunja Task Hub overview showing priorities, progress, labels, colors, recurring tasks, comments, a timer, filters, and footer links](assets/screenshots/task-hub-overview-v3.png)
 
 The card automatically discovers the projects and tasks available to the configured Vikunja token. Switch projects or categories from the counted selectors, search titles instantly, and keep completed work available without letting it clutter the active list.
 
 ### Organize many tasks at once
 
-![Two tasks selected with existing-project, new-project, category, clipboard, completion, and deletion actions](assets/screenshots/task-hub-bulk-actions-v2.png)
+![Synthetic bulk-selection view with existing-project, new-project, category, clipboard, completion, cancellation, and deletion actions](assets/screenshots/task-hub-bulk-actions-v3.png)
 
 Task checkboxes are for real multi-selection—not an overloaded completion control. Select any combination of tasks, then move them to an existing or newly named project, add or remove categories, mark them complete or active, or delete them with confirmation.
 
 ### Rich task details and recurring schedules
 
-![Task editor with Markdown tools, due date, recurring schedule, categories, attachments, and media capture](assets/screenshots/task-hub-task-editor-v2.png)
+![Synthetic task editor with Markdown tools, priority, progress, color, recurring schedule, labels, and attachments](assets/screenshots/task-hub-task-editor-v3.png)
 
 Open any task for a focused editor with Markdown formatting and preview, due dates, recurring schedules, multiple categories, completion state, attachment management, and direct photo or video capture on supported devices. Recurrence stays in the detailed editor, while a compact `↻` marker identifies repeating tasks in the main list.
+
+![Synthetic lower task editor showing attachment capture, file controls, timestamped comments, comment deletion, and comment creation](assets/screenshots/task-hub-task-comments-v3.png)
+
+Task details keep attachments and comments together. Add ordinary files or request device-native photo and video capture, then review timestamped comments, add a comment, or remove individual comments.
+
+### Persistent timers and flexible scheduling
+
+![Synthetic expanded timer showing elapsed time, saved Pause and Stop actions, Notes, picker types, and timer controls](assets/screenshots/task-hub-timer-scheduler-v3.png)
+
+Add a paused timer from a task's right-click or long-press menu. Start and Pause act immediately; saved Start, Pause, or Stop actions can use minute, second, or exact timestamp scheduling. Home Assistant persists timers and executes scheduled actions without requiring the dashboard to remain open.
 
 > The screenshots use a generated sample workspace. They contain no private Home Assistant or Vikunja data.
 
 ## Language support
 
-Vikunja Task Hub follows the language selected in Home Assistant and falls back to English when a locale is not yet available. The card, detailed editor, confirmation dialogs, recurrence controls, and footer links include these dictionaries:
+Vikunja Task Hub follows the language selected in Home Assistant and falls back to English when a locale is not yet available. The setup and reconfiguration flow, card, detailed editor, confirmation dialogs, recurrence controls, and footer links include these translations:
 
 - English (English)
 - Spanish (Español)
@@ -81,11 +91,20 @@ Vikunja Task Hub follows the language selected in Home Assistant and falls back 
 
 - Add tasks without leaving the dashboard.
 - Search task titles as you type without interrupting keyboard focus.
-- Sort newest tasks first and keep completed tasks in a separate collapsible section.
-- Open any task to edit its title, description, due date, categories, and completion state.
+- Sort higher-priority tasks first, then newest first within the same priority, and keep completed tasks in a separate collapsible section.
+- Open any task to edit its title, description, due date, labels, priority, progress, color, recurrence, and completion state.
 - Write Markdown descriptions with shortcuts for headings, emphasis, lists, quotes, links, and inline code.
 - Preview formatted descriptions before saving.
 - Complete, reactivate, move, or permanently delete tasks.
+- Right-click or long-press a task for quick completion, priority, copy, share, and delete actions. Sharing uses the device's native share sheet when available and falls back to the clipboard.
+- Expand comments only on tasks that have them, without loading comment bodies into the main task request.
+- Open a bundled, language-matched Tips & Documentation guide from the card footer for plain-language guidance and quick references covering task editing, selection, bulk actions, comments, attachments, indicators, and timers.
+- Track time independently on each task with restart-safe **Start**, **Pause**, **Stop**, and **Cancel** controls. Optional notes persist with the timer and are included with the duration and date in the removable completion comment.
+- Add a paused stopwatch through right-click or long press, then use its collapsible **Timer** section for elapsed time, notes, saved actions, and all session controls. Server-side schedules persist without an open browser.
+- Use **Start** and **Pause** for immediate control. Build any number of future Start, Pause, or Stop actions by selecting Minutes, Seconds, or an exact Timestamp and pressing **Save**.
+- Review saved actions above Notes and cancel each one independently. Stop writes the normal dated duration-and-Notes comment; timer **Cancel** still removes the full timer after confirmation.
+- See task-color dots, label chips, priority markers, and compact progress bars directly in the list.
+- Open the selected project directly in Vikunja from the card footer.
 
 ### Recurring tasks
 
@@ -96,7 +115,7 @@ Vikunja Task Hub follows the language selected in Home Assistant and falls back 
 
 ### Bulk organization
 
-- Select visible tasks individually or use **Select all** with a live selected count.
+- Select visible tasks individually or use **Select all**; the selected count appears only when at least one task is selected.
 - Move selected tasks to an existing project or create, move into, and select a newly named project in one action.
 - Add or remove multiple categories across the selection.
 - Show **Mark complete** or **Mark active** only when the selected tasks make that action relevant.
@@ -164,7 +183,7 @@ Do not install this project alongside another custom integration using the `viku
 
 ## Vikunja API token
 
-Create a dedicated token in Vikunja and grant only the capabilities you need. Read access to projects, tasks, and labels is required for normal display. Creating, updating, deleting, moving, labeling, and attaching files require the corresponding write permissions.
+Create a dedicated token in Vikunja and grant only the capabilities you need. Read access to projects, tasks, labels, and comments is required for normal display. Creating, updating, deleting, moving, labeling, and attaching files require the corresponding write permissions.
 
 Avoid reusing an administrator token. Token permissions remain the primary authorization boundary: the card can access only the Vikunja data and operations allowed to that token.
 
@@ -276,9 +295,7 @@ Never include API tokens, private service URLs, task content, or Home Assistant 
 - Add a preferences page for customizing task sort order.
 - Add subtasks for breaking larger work into independently trackable steps.
 - Add task reminders while continuing to use Vikunja as the scheduling source of truth.
-- Add task priorities with clear visual indicators and filtering.
 - Add task relations for blocking, related, and cross-project task links.
-- Add task comments alongside the existing rich descriptions.
 - Expand visual customization while continuing to inherit Home Assistant theme colors by default.
 - Evaluate a dedicated mobile-focused card or layout for workflows that cannot be served well by the responsive workspace.
 

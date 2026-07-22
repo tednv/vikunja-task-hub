@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar Vikunja Task Hub",
+        "description": "Conecta Home Assistant a una instancia de Vikunja para gestionar tareas directamente desde el panel.",
+        "data": {
+          "url": "URL de la instancia de Vikunja",
+          "api_key": "Clave de API de Vikunja",
+          "strict_ssl": "SSL estricto"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurar Vikunja Task Hub",
+        "description": "Actualiza la conexión de Vikunja utilizada por la tarjeta del panel.",
+        "data": {
+          "url": "URL de la instancia de Vikunja",
+          "api_key": "Clave de API de Vikunja",
+          "strict_ssl": "SSL estricto"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "La configuración de conexión se actualizó correctamente."
+    },
+    "error": {
+      "cannot_connect": "No se puede conectar con la API de Vikunja."
+    }
+  }
+}

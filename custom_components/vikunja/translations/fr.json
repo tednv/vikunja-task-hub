@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connecter Vikunja Task Hub",
+        "description": "Connectez Home Assistant à une instance Vikunja pour gérer les tâches directement depuis le tableau de bord.",
+        "data": {
+          "url": "URL de l’instance Vikunja",
+          "api_key": "Clé API Vikunja",
+          "strict_ssl": "Validation SSL stricte"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurer Vikunja Task Hub",
+        "description": "Mettez à jour la connexion Vikunja utilisée par la carte du tableau de bord.",
+        "data": {
+          "url": "URL de l’instance Vikunja",
+          "api_key": "Clé API Vikunja",
+          "strict_ssl": "Validation SSL stricte"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Les paramètres de connexion ont été mis à jour."
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter à l’API Vikunja."
+    }
+  }
+}

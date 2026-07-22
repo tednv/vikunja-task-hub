@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vikunja Task Hub csatlakoztatása",
+        "description": "Csatlakoztassa a Home Assistant rendszert egy Vikunja-példányhoz a feladatok közvetlen irányítópulti kezeléséhez.",
+        "data": {
+          "url": "Vikunja-példány URL-címe",
+          "api_key": "Vikunja API-kulcs",
+          "strict_ssl": "Szigorú SSL-ellenőrzés"
+        }
+      },
+      "reconfigure": {
+        "title": "Vikunja Task Hub újrakonfigurálása",
+        "description": "Frissítse az irányítópult-kártya által használt Vikunja-kapcsolatot.",
+        "data": {
+          "url": "Vikunja-példány URL-címe",
+          "api_key": "Vikunja API-kulcs",
+          "strict_ssl": "Szigorú SSL-ellenőrzés"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "A kapcsolati beállítások sikeresen frissültek."
+    },
+    "error": {
+      "cannot_connect": "Nem lehet csatlakozni a Vikunja API-hoz."
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Połącz Vikunja Task Hub",
+        "description": "Połącz Home Assistant z instancją Vikunja, aby zarządzać zadaniami bezpośrednio z pulpitu.",
+        "data": {
+          "url": "Adres URL instancji Vikunja",
+          "api_key": "Klucz API Vikunja",
+          "strict_ssl": "Ścisła weryfikacja SSL"
+        }
+      },
+      "reconfigure": {
+        "title": "Skonfiguruj ponownie Vikunja Task Hub",
+        "description": "Zaktualizuj połączenie Vikunja używane przez kartę pulpitu.",
+        "data": {
+          "url": "Adres URL instancji Vikunja",
+          "api_key": "Klucz API Vikunja",
+          "strict_ssl": "Ścisła weryfikacja SSL"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Ustawienia połączenia zostały zaktualizowane."
+    },
+    "error": {
+      "cannot_connect": "Nie można połączyć się z API Vikunja."
+    }
+  }
+}

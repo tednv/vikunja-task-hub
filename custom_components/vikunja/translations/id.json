@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hubungkan Vikunja Task Hub",
+        "description": "Hubungkan Home Assistant ke instans Vikunja untuk mengelola tugas langsung dari dasbor.",
+        "data": {
+          "url": "URL instans Vikunja",
+          "api_key": "Kunci API Vikunja",
+          "strict_ssl": "SSL ketat"
+        }
+      },
+      "reconfigure": {
+        "title": "Konfigurasi ulang Vikunja Task Hub",
+        "description": "Perbarui koneksi Vikunja yang digunakan oleh kartu dasbor.",
+        "data": {
+          "url": "URL instans Vikunja",
+          "api_key": "Kunci API Vikunja",
+          "strict_ssl": "SSL ketat"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Pengaturan koneksi berhasil diperbarui."
+    },
+    "error": {
+      "cannot_connect": "Tidak dapat terhubung ke API Vikunja."
+    }
+  }
+}

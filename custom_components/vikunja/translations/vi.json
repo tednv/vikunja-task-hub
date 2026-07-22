@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kết nối Vikunja Task Hub",
+        "description": "Kết nối Home Assistant với một phiên bản Vikunja để quản lý công việc trực tiếp từ bảng điều khiển.",
+        "data": {
+          "url": "URL phiên bản Vikunja",
+          "api_key": "Khóa API Vikunja",
+          "strict_ssl": "Xác minh SSL nghiêm ngặt"
+        }
+      },
+      "reconfigure": {
+        "title": "Cấu hình lại Vikunja Task Hub",
+        "description": "Cập nhật kết nối Vikunja được thẻ bảng điều khiển sử dụng.",
+        "data": {
+          "url": "URL phiên bản Vikunja",
+          "api_key": "Khóa API Vikunja",
+          "strict_ssl": "Xác minh SSL nghiêm ngặt"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Đã cập nhật cài đặt kết nối."
+    },
+    "error": {
+      "cannot_connect": "Không thể kết nối với API Vikunja."
+    }
+  }
+}

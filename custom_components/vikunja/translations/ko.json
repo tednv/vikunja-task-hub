@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vikunja Task Hub 연결",
+        "description": "대시보드에서 작업을 직접 관리할 수 있도록 Home Assistant를 Vikunja 인스턴스에 연결합니다.",
+        "data": {
+          "url": "Vikunja 인스턴스 URL",
+          "api_key": "Vikunja API 키",
+          "strict_ssl": "엄격한 SSL 확인"
+        }
+      },
+      "reconfigure": {
+        "title": "Vikunja Task Hub 재구성",
+        "description": "대시보드 카드에서 사용하는 Vikunja 연결을 업데이트합니다.",
+        "data": {
+          "url": "Vikunja 인스턴스 URL",
+          "api_key": "Vikunja API 키",
+          "strict_ssl": "엄격한 SSL 확인"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "연결 설정을 업데이트했습니다."
+    },
+    "error": {
+      "cannot_connect": "Vikunja API에 연결할 수 없습니다."
+    }
+  }
+}

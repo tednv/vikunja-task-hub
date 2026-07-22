@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Повежи Vikunja Task Hub",
+        "description": "Повежите Home Assistant са Vikunja инстанцом да бисте управљали задацима директно са контролне табле.",
+        "data": {
+          "url": "URL Vikunja инстанце",
+          "api_key": "Vikunja API кључ",
+          "strict_ssl": "Строга SSL провера"
+        }
+      },
+      "reconfigure": {
+        "title": "Поново подеси Vikunja Task Hub",
+        "description": "Ажурирајте Vikunja везу коју користи картица контролне табле.",
+        "data": {
+          "url": "URL Vikunja инстанце",
+          "api_key": "Vikunja API кључ",
+          "strict_ssl": "Строга SSL провера"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Подешавања везе су успешно ажурирана."
+    },
+    "error": {
+      "cannot_connect": "Није могуће повезивање са Vikunja API-јем."
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ceangail Vikunja Task Hub",
+        "description": "Ceangail Home Assistant le freastalaí Vikunja chun tascanna a bhainistiú go díreach ón deais.",
+        "data": {
+          "url": "URL an fhreastalaí Vikunja",
+          "api_key": "Eochair API Vikunja",
+          "strict_ssl": "SSL docht"
+        }
+      },
+      "reconfigure": {
+        "title": "Athchumraigh Vikunja Task Hub",
+        "description": "Nuashonraigh an ceangal Vikunja a úsáideann cárta na deaise.",
+        "data": {
+          "url": "URL an fhreastalaí Vikunja",
+          "api_key": "Eochair API Vikunja",
+          "strict_ssl": "SSL docht"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Nuashonraíodh na socruithe ceangail."
+    },
+    "error": {
+      "cannot_connect": "Ní féidir ceangal le API Vikunja."
+    }
+  }
+}

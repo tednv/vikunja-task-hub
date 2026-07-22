@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectează Vikunja Task Hub",
+        "description": "Conectează Home Assistant la o instanță Vikunja pentru gestionarea sarcinilor direct din panoul de control.",
+        "data": {
+          "url": "URL instanță Vikunja",
+          "api_key": "Cheie API Vikunja",
+          "strict_ssl": "Verificare SSL strictă"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurează Vikunja Task Hub",
+        "description": "Actualizează conexiunea Vikunja utilizată de cardul din panoul de control.",
+        "data": {
+          "url": "URL instanță Vikunja",
+          "api_key": "Cheie API Vikunja",
+          "strict_ssl": "Verificare SSL strictă"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Setările conexiunii au fost actualizate."
+    },
+    "error": {
+      "cannot_connect": "Nu se poate realiza conexiunea la API-ul Vikunja."
+    }
+  }
+}

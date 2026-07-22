@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Tips &amp; Documentation</title>
+    <style>
+      :root { color-scheme:light dark; font-family:system-ui,sans-serif; }
+      body { margin:0; background:#111827; color:#f8fafc; }
+      main { width:min(920px,calc(100% - 32px)); margin:32px auto; }
+      header { padding:24px; border-radius:18px; background:linear-gradient(135deg,#243c8f,#526cc9); }
+      h1 { margin:0 0 8px; } p { margin:0; line-height:1.5; }
+      .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-top:18px; }
+      section { padding:18px; border:1px solid #334155; border-radius:14px; background:#1e293b; }
+      h2 { margin:0 0 12px; font-size:18px; }
+      .guide { margin:0 0 12px; color:#e2e8f0; }
+      .flow { display:flex; flex-wrap:wrap; gap:7px; align-items:center; line-height:1.5; }
+      .chip { padding:5px 8px; border-radius:8px; background:#334155; }
+      .arrow { color:#93c5fd; }
+    </style>
+  </head>
+  <body>
+    <main><header><h1></h1><p></p></header><div class="grid"></div></main>
+    <script type="module">
+      import { TRANSLATIONS } from "./vikunja-todo-card-translations.js?v=0.32.1";
+      const params=new URLSearchParams(location.search); let locale=params.get("lang")||navigator.language.split("-")[0]; if(!TRANSLATIONS[locale])locale="en";
+      const chip=value=>`<span class="chip">${value}</span>`; const flow=values=>`<div class="flow">${values.map((value,index)=>`${index?'<span class="arrow">→</span>':''}${chip(value)}`).join("")}</div>`;
+      function render(){const t=key=>TRANSLATIONS[locale][key]||TRANSLATIONS.en[key]||key;document.documentElement.lang=locale;document.documentElement.dir=["ar","fa","ur"].includes(locale)?"rtl":"ltr";document.title=t("tips");document.querySelector("h1").textContent=t("tips");document.querySelector("header p").textContent=t("tipsIntro");document.querySelector(".grid").innerHTML=`
+        <section><h2>${t("selectAll")}</h2><p class="guide">${t("tipsSelectionGuide")}</p>${flow([`☐ ${t("selectTask")}`,t("selected"),t("cancel")])}</section>
+        <section><h2>${t("editTask")}</h2><p class="guide">${t("tipsEditingGuide")}</p>${flow([t("title"),t("description"),t("recurrence"),t("saveChanges")])}</section>
+        <section><h2>${t("taskActions")}</h2><p class="guide">${t("tipsQuickGuide")}</p>${flow([t("rightClickLongPress"),t("markComplete"),t("copyAsText"),t("share"),t("color")])}</section>
+        <section><h2>${t("comments")}</h2><p class="guide">${t("tipsCommentsGuide")}</p>${flow([`${t("comments")} (x)`,t("addComment"),t("deleteComment")])}</section>
+        <section><h2>${t("timeTracking")}</h2><p class="guide">${t("tipsTimerGuide")}</p>${flow([t("addTimer"),t("startTimer"),t("pauseTimer"),t("stopTimer"),t("comments")])}</section>
+        <section><h2>${t("action")} · ${t("pickerType")}</h2><p class="guide">${t("tipsScheduleGuide")}</p>${flow([t("action"),t("pickerType"),t("scheduleValue"),t("save"),t("cancel")])}</section>
+        <section><h2>${t("taskActions")}</h2><p class="guide">${t("tipsBulkGuide")}</p>${flow([t("moveToProject"),t("addCategories"),t("markComplete"),t("deleteTasks")])}</section>
+        <section><h2>${t("priority")} · ${t("attachments")}</h2><p class="guide">${t("tipsIndicatorsGuide")}</p>${flow([t("priority"),t("progress"),t("labels"),t("color"),t("recurrence"),t("attachments")])}</section>`;}
+      render();
+    </script>
+  </body>
+</html>

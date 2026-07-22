@@ -10,12 +10,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 INTEGRATION = ROOT / "custom_components" / "vikunja"
+SETUP_TRANSLATIONS = INTEGRATION / "translations"
+CARD_TRANSLATIONS = INTEGRATION / "frontend" / "translations"
+EXPECTED_SETUP_LOCALES = {
+    "ar", "bn", "de", "el", "en", "es", "fa", "fr", "ga", "hi", "hu",
+    "id", "it", "ja", "ko", "nl", "pl", "pt", "ro", "ru", "sr", "th",
+    "tr", "uk", "ur", "vi", "zh-Hans",
+}
+EXPECTED_CARD_LOCALES = (EXPECTED_SETUP_LOCALES - {"zh-Hans"}) | {"zh"}
 JSON_FILES = (
     ROOT / "hacs.json",
     ROOT / ".prettierrc.json",
     INTEGRATION / "manifest.json",
     INTEGRATION / "strings.json",
-    INTEGRATION / "translations" / "en.json",
+    *sorted(SETUP_TRANSLATIONS.glob("*.json")),
+    *sorted(CARD_TRANSLATIONS.glob("*.json")),
 )
 MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 
@@ -32,6 +41,13 @@ def constant_value(path: Path, name: str) -> str:
     raise ValueError(f"{name} was not found in {path}")
 
 
+def schema(value: object) -> object:
+    """Return a nested key-only representation of a translation document."""
+    if isinstance(value, dict):
+        return {key: schema(child) for key, child in value.items()}
+    return str
+
+
 def main() -> None:
     """Validate JSON, versions, translations, and required standalone files."""
     parser = argparse.ArgumentParser()
@@ -44,8 +60,28 @@ def main() -> None:
     if manifest["version"] != version:
         raise SystemExit(f"Version mismatch: manifest={manifest['version']} const={version}")
 
-    if parsed[INTEGRATION / "strings.json"] != parsed[INTEGRATION / "translations" / "en.json"]:
+    if parsed[INTEGRATION / "strings.json"] != parsed[SETUP_TRANSLATIONS / "en.json"]:
         raise SystemExit("strings.json and translations/en.json differ")
+
+    setup_locales = {path.stem for path in SETUP_TRANSLATIONS.glob("*.json")}
+    if setup_locales != EXPECTED_SETUP_LOCALES:
+        raise SystemExit("Setup translation files do not match supported locales")
+    setup_schema = schema(parsed[INTEGRATION / "strings.json"])
+    for locale in sorted(setup_locales):
+        document = parsed[SETUP_TRANSLATIONS / f"{locale}.json"]
+        if schema(document) != setup_schema:
+            raise SystemExit(f"Setup translation schema mismatch: {locale}")
+
+    card_locales = {path.stem for path in CARD_TRANSLATIONS.glob("*.json")}
+    if card_locales != EXPECTED_CARD_LOCALES:
+        raise SystemExit("Card translation files do not match supported locales")
+    card_keys = set(parsed[CARD_TRANSLATIONS / "en.json"])
+    for locale in sorted(card_locales):
+        document = parsed[CARD_TRANSLATIONS / f"{locale}.json"]
+        if set(document) != card_keys:
+            raise SystemExit(f"Card translation key mismatch: {locale}")
+        if any(not isinstance(value, str) or not value.strip() for value in document.values()):
+            raise SystemExit(f"Card translation contains an empty value: {locale}")
 
     required = (
         ROOT / "README.md",

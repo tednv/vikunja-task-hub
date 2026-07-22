@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vikunja Task Hub منسلک کریں",
+        "description": "ڈیش بورڈ سے براہ راست کام منظم کرنے کے لیے Home Assistant کو Vikunja انسٹینس سے منسلک کریں۔",
+        "data": {
+          "url": "Vikunja انسٹینس URL",
+          "api_key": "Vikunja API کلید",
+          "strict_ssl": "سخت SSL جانچ"
+        }
+      },
+      "reconfigure": {
+        "title": "Vikunja Task Hub دوبارہ ترتیب دیں",
+        "description": "ڈیش بورڈ کارڈ کے زیر استعمال Vikunja کنکشن کو اپ ڈیٹ کریں۔",
+        "data": {
+          "url": "Vikunja انسٹینس URL",
+          "api_key": "Vikunja API کلید",
+          "strict_ssl": "سخت SSL جانچ"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "کنکشن کی ترتیبات کامیابی سے اپ ڈیٹ ہو گئیں۔"
+    },
+    "error": {
+      "cannot_connect": "Vikunja API سے منسلک نہیں ہو سکا۔"
+    }
+  }
+}

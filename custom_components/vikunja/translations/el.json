@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Σύνδεση του Vikunja Task Hub",
+        "description": "Συνδέστε το Home Assistant με μια εγκατάσταση Vikunja για άμεση διαχείριση εργασιών από τον πίνακα ελέγχου.",
+        "data": {
+          "url": "URL εγκατάστασης Vikunja",
+          "api_key": "Κλειδί API Vikunja",
+          "strict_ssl": "Αυστηρός έλεγχος SSL"
+        }
+      },
+      "reconfigure": {
+        "title": "Επαναρύθμιση του Vikunja Task Hub",
+        "description": "Ενημερώστε τη σύνδεση Vikunja που χρησιμοποιείται από την κάρτα πίνακα ελέγχου.",
+        "data": {
+          "url": "URL εγκατάστασης Vikunja",
+          "api_key": "Κλειδί API Vikunja",
+          "strict_ssl": "Αυστηρός έλεγχος SSL"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Οι ρυθμίσεις σύνδεσης ενημερώθηκαν με επιτυχία."
+    },
+    "error": {
+      "cannot_connect": "Δεν είναι δυνατή η σύνδεση με το API του Vikunja."
+    }
+  }
+}

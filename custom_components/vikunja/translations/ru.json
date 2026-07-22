@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Подключить Vikunja Task Hub",
+        "description": "Подключите Home Assistant к экземпляру Vikunja для управления задачами прямо с панели.",
+        "data": {
+          "url": "URL экземпляра Vikunja",
+          "api_key": "Ключ API Vikunja",
+          "strict_ssl": "Строгая проверка SSL"
+        }
+      },
+      "reconfigure": {
+        "title": "Перенастроить Vikunja Task Hub",
+        "description": "Обновите подключение Vikunja, используемое карточкой панели.",
+        "data": {
+          "url": "URL экземпляра Vikunja",
+          "api_key": "Ключ API Vikunja",
+          "strict_ssl": "Строгая проверка SSL"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Настройки подключения успешно обновлены."
+    },
+    "error": {
+      "cannot_connect": "Не удалось подключиться к API Vikunja."
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vikunja Task Hub সংযুক্ত করুন",
+        "description": "ড্যাশবোর্ড থেকে সরাসরি কাজ পরিচালনার জন্য Home Assistant-কে একটি Vikunja ইনস্ট্যান্সের সঙ্গে সংযুক্ত করুন।",
+        "data": {
+          "url": "Vikunja ইনস্ট্যান্স URL",
+          "api_key": "Vikunja API কী",
+          "strict_ssl": "কঠোর SSL"
+        }
+      },
+      "reconfigure": {
+        "title": "Vikunja Task Hub পুনরায় কনফিগার করুন",
+        "description": "ড্যাশবোর্ড কার্ডে ব্যবহৃত Vikunja সংযোগটি হালনাগাদ করুন।",
+        "data": {
+          "url": "Vikunja ইনস্ট্যান্স URL",
+          "api_key": "Vikunja API কী",
+          "strict_ssl": "কঠোর SSL"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "সংযোগের সেটিংস সফলভাবে হালনাগাদ হয়েছে।"
+    },
+    "error": {
+      "cannot_connect": "Vikunja API-এর সঙ্গে সংযোগ করা যাচ্ছে না।"
+    }
+  }
+}

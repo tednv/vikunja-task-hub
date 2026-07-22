@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "连接 Vikunja Task Hub",
+        "description": "将 Home Assistant 连接到 Vikunja 实例，以便直接从仪表板管理任务。",
+        "data": {
+          "url": "Vikunja 实例 URL",
+          "api_key": "Vikunja API 密钥",
+          "strict_ssl": "严格 SSL 验证"
+        }
+      },
+      "reconfigure": {
+        "title": "重新配置 Vikunja Task Hub",
+        "description": "更新仪表板卡片使用的 Vikunja 连接。",
+        "data": {
+          "url": "Vikunja 实例 URL",
+          "api_key": "Vikunja API 密钥",
+          "strict_ssl": "严格 SSL 验证"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "连接设置已成功更新。"
+    },
+    "error": {
+      "cannot_connect": "无法连接到 Vikunja API。"
+    }
+  }
+}

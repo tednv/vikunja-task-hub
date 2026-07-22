@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.storage import Store
 from pyvikunja.api import APIError, VikunjaAPI
 
 from .const import (
@@ -19,12 +20,26 @@ from .const import (
     LOGGER,
     VERSION,
 )
-from .dashboard import async_register_dashboard_commands
+from .dashboard import async_complete_scheduled_timer, async_register_dashboard_commands
 from .frontend import async_register_frontend
+from .time_tracking import TaskTimeTracker
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up integration-wide frontend resources."""
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    tracker = TaskTimeTracker(
+        Store(hass, 1, f"{DOMAIN}.time_tracking"),
+        on_change=lambda entry_id, task_id: hass.bus.async_fire(
+            "vikunja_time_tracking_updated",
+            {"entry_id": entry_id, "task_id": task_id},
+        ),
+        on_complete=lambda entry_id, task_id, elapsed, completed_at, note: (
+            async_complete_scheduled_timer(hass, entry_id, task_id, elapsed, completed_at, note)
+        ),
+    )
+    await tracker.async_load()
+    domain_data["time_tracker"] = tracker
     async_register_dashboard_commands(hass)
     await async_register_frontend(hass, VERSION)
     return True
@@ -52,7 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.title != entry_title:
         hass.config_entries.async_update_entry(entry, title=entry_title)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"api": vikunja_api}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "api": vikunja_api,
+        "entry_id": entry.entry_id,
+    }
     LOGGER.debug("Vikunja Task Hub connection is ready")
     return True
 

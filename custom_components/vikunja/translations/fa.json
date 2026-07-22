@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "اتصال Vikunja Task Hub",
+        "description": "برای مدیریت مستقیم کارها از داشبورد، Home Assistant را به یک نمونه Vikunja متصل کنید.",
+        "data": {
+          "url": "نشانی نمونه Vikunja",
+          "api_key": "کلید API ویکونجا",
+          "strict_ssl": "بررسی سخت‌گیرانه SSL"
+        }
+      },
+      "reconfigure": {
+        "title": "پیکربندی دوباره Vikunja Task Hub",
+        "description": "اتصال Vikunja مورد استفاده کارت داشبورد را به‌روزرسانی کنید.",
+        "data": {
+          "url": "نشانی نمونه Vikunja",
+          "api_key": "کلید API ویکونجا",
+          "strict_ssl": "بررسی سخت‌گیرانه SSL"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "تنظیمات اتصال با موفقیت به‌روزرسانی شد."
+    },
+    "error": {
+      "cannot_connect": "اتصال به API ویکونجا ممکن نیست."
+    }
+  }
+}

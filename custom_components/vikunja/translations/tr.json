@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vikunja Task Hub'ı bağla",
+        "description": "Görevleri doğrudan panelden yönetmek için Home Assistant'ı bir Vikunja örneğine bağlayın.",
+        "data": {
+          "url": "Vikunja örneği URL'si",
+          "api_key": "Vikunja API anahtarı",
+          "strict_ssl": "Katı SSL doğrulaması"
+        }
+      },
+      "reconfigure": {
+        "title": "Vikunja Task Hub'ı yeniden yapılandır",
+        "description": "Panel kartının kullandığı Vikunja bağlantısını güncelleyin.",
+        "data": {
+          "url": "Vikunja örneği URL'si",
+          "api_key": "Vikunja API anahtarı",
+          "strict_ssl": "Katı SSL doğrulaması"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Bağlantı ayarları başarıyla güncellendi."
+    },
+    "error": {
+      "cannot_connect": "Vikunja API'sine bağlanılamıyor."
+    }
+  }
+}

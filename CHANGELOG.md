@@ -6,11 +6,39 @@ The project uses semantic versioning. Dates use ISO 8601 format.
 
 ## [Unreleased]
 
+No changes yet.
+
+## [0.32.1] - 2026-07-22
+
+### Added
+
+- Add Home Assistant setup and reconfiguration translations matching all 27 dashboard languages.
+- Add priority, progress, color, and label controls to task details, with priority-aware sorting and compact list indicators.
+- Add viewport-safe right-click and long-press task actions for completion, priority, color, copying, native sharing, timer creation, and deletion.
+- Add collapsed, timestamped task comments plus comment creation and individual deletion in task details.
+- Add a bundled language-matched Tips & Documentation page with plain-language guidance for editing, selection, bulk actions, comments, attachments, indicators, and timers.
+- Add persistent per-task timers shared across devices and Home Assistant restarts. Start and Pause act immediately; Stop writes a removable dated duration-and-Notes comment; Cancel removes the timer without creating a comment.
+- Add any number of persisted future Start, Pause, and Stop actions using minutes, seconds, or an exact timestamp. Each saved action is independently cancellable and runs server-side without an open dashboard.
+- Add privacy-safe release screenshots generated from an invented offline workspace covering the overview, bulk actions, task details, attachments, comments, and timer scheduling.
+
 ### Changed
 
-- Align attachment documentation with the current **Add photo** and **Add video** controls and clarify that direct capture is a browser-controlled HTML media-capture hint.
-- Update architecture, privacy, repository-settings, and release-process documentation for the current three-command dashboard API, recurring-task data, protected-main workflow, and detailed release-note requirements.
-- Reconcile the public roadmap with the remaining project-renaming, customization, and mobile-focused ideas while keeping completed recurrence and footer work in the feature documentation.
+- Store card translations in validated per-language JSON dictionaries and generate the browser translation module from those sources.
+- Hide zero-selection status until needed and provide one-tap **Cancel** to clear a bulk selection.
+- Open the connected Vikunja instance directly to the selected project.
+- Keep task color dots and checkboxes aligned, omit color space when no displayed task has a color, and clear colors only through right-click or touch hold.
+- Use the device-native color picker instead of hexadecimal entry.
+- Keep timer controls inside a compact collapsible **Timer (status and elapsed time)** section; the task context menu exposes only **Add timer** for timer creation.
+- Use provider-neutral **Buy me some LLM tokens** support wording.
+- Align README, architecture, privacy, development, translation, attachment-capture, and release documentation with the shipped behavior.
+
+### Reliability and safeguards
+
+- Persist timer state and scheduled actions through Home Assistant storage and restore server-side jobs after restart.
+- Keep comment bodies out of the normal dashboard payload and fetch them only when comments are expanded.
+- Preserve task fields during focused updates and isolate API compatibility adapters for comments, tasks, labels, and attachments.
+- Keep context menus inside the visible viewport, including tasks near the lower and right edges.
+- Validate exact translation-key parity, setup translation schemas, version declarations, repository metadata, and generated browser translations.
 
 ## [0.25.1] - 2026-07-22
 

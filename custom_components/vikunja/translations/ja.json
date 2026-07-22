@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vikunja Task Hub に接続",
+        "description": "ダッシュボードからタスクを直接管理するため、Home Assistant を Vikunja インスタンスに接続します。",
+        "data": {
+          "url": "Vikunja インスタンスの URL",
+          "api_key": "Vikunja API キー",
+          "strict_ssl": "厳格な SSL 検証"
+        }
+      },
+      "reconfigure": {
+        "title": "Vikunja Task Hub を再設定",
+        "description": "ダッシュボードカードで使用する Vikunja 接続を更新します。",
+        "data": {
+          "url": "Vikunja インスタンスの URL",
+          "api_key": "Vikunja API キー",
+          "strict_ssl": "厳格な SSL 検証"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "接続設定を更新しました。"
+    },
+    "error": {
+      "cannot_connect": "Vikunja API に接続できません。"
+    }
+  }
+}

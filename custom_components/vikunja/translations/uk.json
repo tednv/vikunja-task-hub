@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Підключити Vikunja Task Hub",
+        "description": "Підключіть Home Assistant до екземпляра Vikunja, щоб керувати завданнями безпосередньо з панелі.",
+        "data": {
+          "url": "URL екземпляра Vikunja",
+          "api_key": "Ключ API Vikunja",
+          "strict_ssl": "Сувора перевірка SSL"
+        }
+      },
+      "reconfigure": {
+        "title": "Переналаштувати Vikunja Task Hub",
+        "description": "Оновіть підключення Vikunja, яке використовує картка панелі.",
+        "data": {
+          "url": "URL екземпляра Vikunja",
+          "api_key": "Ключ API Vikunja",
+          "strict_ssl": "Сувора перевірка SSL"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Налаштування підключення успішно оновлено."
+    },
+    "error": {
+      "cannot_connect": "Не вдалося підключитися до API Vikunja."
+    }
+  }
+}

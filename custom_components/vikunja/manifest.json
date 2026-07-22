@@ -10,5 +10,5 @@
   "issue_tracker": "https://github.com/tednv/vikunja-task-hub/issues",
   "loggers": ["pyvikunja"],
   "requirements": ["pyvikunja==0.23"],
-  "version": "0.25.1"
+  "version": "0.32.1"
 }
