@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vikunja Task Hub feature demo</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --primary-text-color: #f4f7ff;
+        --secondary-text-color: #aeb9d6;
+        --card-background-color: #121a32;
+        --secondary-background-color: #1b2646;
+        --divider-color: #334064;
+        --error-color: #ff7085;
+        --ha-card-box-shadow: 0 18px 60px rgb(0 0 0 / 35%);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 20% 0%, rgb(95 127 255 / 24%), transparent 35%),
+          linear-gradient(145deg, #080d1d, #111a35 58%, #10172a);
+        color: var(--primary-text-color);
+        font: 16px/1.45 Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+      main { width: min(1180px, 100%); margin: 0 auto; }
+      header { display: flex; align-items: center; gap: 16px; margin: 0 0 18px; }
+      header img { width: 58px; height: 58px; border-radius: 14px; }
+      h1 { margin: 0; font-size: 26px; }
+      header p { margin: 2px 0 0; color: var(--secondary-text-color); }
+      vikunja-todo-card { display: block; }
+    </style>
+    <script type="module" src="../custom_components/vikunja/frontend/vikunja-todo-card.js"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="../assets/vikunja-task-hub-icon.png" alt="">
+        <div><h1>Vikunja Task Hub</h1><p>Privacy-safe sample workspace</p></div>
+      </header>
+      <vikunja-todo-card></vikunja-todo-card>
+    </main>
+    <script type="module">
+      const demoData = {
+        projects: [
+          { id: 1, title: "Personal" },
+          { id: 2, title: "Launch plan" },
+          { id: 3, title: "Home projects" },
+        ],
+        labels: [
+          { id: 10, title: "Today" },
+          { id: 11, title: "Deep work" },
+          { id: 12, title: "Errands" },
+          { id: 13, title: "Waiting" },
+        ],
+        tasks: [
+          { id: 108, project_id: 2, title: "Publish the launch checklist", description: "Review the final checklist and share it with the team.", created: "2026-07-21T14:20:00Z", due: "2026-07-24T00:00:00Z", done: false, labels: [10, 11], attachments: [{ id: 1, name: "launch-checklist.pdf", size: 284672 }] },
+          { id: 107, project_id: 3, title: "Photograph the garden layout", description: "Capture wide and detail photos before moving the planters.", created: "2026-07-21T13:10:00Z", due: null, done: false, labels: [10], attachments: [] },
+          { id: 106, project_id: 1, title: "Plan weekend meal prep", description: "Choose three recipes and prepare a shopping list.", created: "2026-07-21T11:45:00Z", due: "2026-07-25T00:00:00Z", done: false, labels: [12], attachments: [] },
+          { id: 105, project_id: 2, title: "Draft release announcement", description: "Summarize the highlights in clear, friendly language.", created: "2026-07-20T19:30:00Z", due: null, done: false, labels: [11], attachments: [] },
+          { id: 104, project_id: 3, title: "Replace the air filter", description: "Use the spare filter stored with the household supplies.", created: "2026-07-20T16:00:00Z", due: null, done: false, labels: [12], attachments: [] },
+          { id: 103, project_id: 2, title: "Collect design feedback", description: "Waiting for the last review comments.", created: "2026-07-19T18:05:00Z", due: null, done: false, labels: [13], attachments: [] },
+          { id: 102, project_id: 1, title: "Archive monthly receipts", description: "Receipts are filed and the digital copies are organized.", created: "2026-07-18T12:15:00Z", due: null, done: true, labels: [12], attachments: [] },
+          { id: 101, project_id: 2, title: "Create project workspace", description: "Initial project structure completed.", created: "2026-07-17T09:00:00Z", due: null, done: true, labels: [11], attachments: [] },
+        ],
+      };
+      await customElements.whenDefined("vikunja-todo-card");
+      const card = document.querySelector("vikunja-todo-card");
+      card._hass = { callWS: async () => structuredClone(demoData) };
+      card._data = structuredClone(demoData);
+      card._selectedProject = "all";
+      card._selectedLabel = "all";
+      card._render();
+      window.demoCard = card;
+    </script>
+  </body>
+</html>

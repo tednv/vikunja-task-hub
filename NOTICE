@@ -1,0 +1,16 @@
+Vikunja Task Hub
+
+This project began as a derivative of vikunja-homeassistant:
+https://github.com/joeShuff/vikunja-homeassistant
+
+The derivative has been substantially modified, including replacement of the
+entity/device model with a direct dashboard API and custom card, new project and
+category management, bulk task actions, rich task editing, attachment support,
+responsive layout work, and revised configuration and documentation.
+
+The original and modified work are distributed under the GNU Affero General
+Public License, version 3. The complete license text is included in LICENSE.
+
+Vikunja is a trademark of its respective owner. Home Assistant is a trademark
+of the Open Home Foundation. This community project is not affiliated with or
+endorsed by either project.
