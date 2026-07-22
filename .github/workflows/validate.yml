@@ -26,7 +26,7 @@ jobs:
           ruff format --check custom_components/vikunja
           python -m compileall -q custom_components/vikunja
           python -m unittest discover -s tests -v
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: Validate frontend syntax
