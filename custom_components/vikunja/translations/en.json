@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Vikunja Task Hub",
+        "description": "Connect Home Assistant to a Vikunja instance for direct dashboard task management.",
+        "data": {
+          "url": "Vikunja instance URL",
+          "api_key": "Vikunja API key",
+          "strict_ssl": "Strict SSL"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Vikunja Task Hub",
+        "description": "Update the Vikunja connection used by the dashboard card.",
+        "data": {
+          "url": "Vikunja instance URL",
+          "api_key": "Vikunja API key",
+          "strict_ssl": "Strict SSL"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "Connection settings updated successfully."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the Vikunja API."
+    }
+  }
+}
