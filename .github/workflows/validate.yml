@@ -1,0 +1,49 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repository:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python validation tools
+        run: python -m pip install ruff
+      - name: Validate Python
+        run: |
+          ruff check custom_components/vikunja
+          ruff format --check custom_components/vikunja
+          python -m compileall -q custom_components/vikunja
+          python -m unittest discover -s tests -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate frontend syntax
+        run: node --check custom_components/vikunja/frontend/vikunja-todo-card.js
+      - name: Validate metadata
+        run: python scripts/validate_repository.py
+
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration

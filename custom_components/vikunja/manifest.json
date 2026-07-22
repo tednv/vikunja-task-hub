@@ -1,0 +1,14 @@
+{
+  "domain": "vikunja",
+  "name": "Vikunja Task Hub",
+  "codeowners": ["@tednv"],
+  "config_flow": true,
+  "dependencies": ["frontend", "http", "lovelace"],
+  "documentation": "https://github.com/tednv/vikunja-task-hub",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/tednv/vikunja-task-hub/issues",
+  "loggers": ["pyvikunja"],
+  "requirements": ["pyvikunja==0.23"],
+  "version": "0.24.0"
+}
