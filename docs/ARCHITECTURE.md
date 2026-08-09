@@ -37,6 +37,10 @@ Vikunja remains the source of truth for projects, labels, tasks, comments, and a
 
 Vikunja is the primary data-authorization boundary. Home Assistant administrator status is additionally required for project and category creation/deletion.
 
+After a successful mutation, the command layer emits a local `vikunja_task_hub_action` event. `automation.py` builds each event from an explicit field allowlist so automations can react to assignments, status changes, moves, comments, attachments, and timer actions without exposing free-form task content. Read-only operations and failed mutations do not emit success events.
+
+`event.py` translates that internal stream into a fixed set of stable event targets per config entry. Targets such as **Assigned to me**, **Task completed**, and **Task moved** update on every matching occurrence, including consecutive events of the same type. This keeps Home Assistant triggers reliable without creating per-task or per-project entities. `services.py` registers focused mutation actions for task creation, status, self-assignment, movement, due dates, priority, and category membership. Successful service actions return to the same event stream so open cards and automation triggers stay synchronized.
+
 ### Compatibility adapters
 
 `attachments.py`, `comments.py`, `labels.py`, and `tasks.py` contain API operations or expanded reads not exposed as stable high-level methods by the pinned `pyvikunja` release. Keeping these calls isolated makes a future client-library upgrade easier to audit.

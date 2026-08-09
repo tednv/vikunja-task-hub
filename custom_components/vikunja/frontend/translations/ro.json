@@ -22,6 +22,7 @@
   "addTask": "Adaugă sarcină",
   "selectAll": "Selectează tot",
   "selected": "selectate",
+  "myTasks": "Sarcinile mele",
   "filterTasks": "Filtrează titlurile sarcinilor",
   "project": "Proiect",
   "categories": "Categorii",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Adăugați un cronometru din acțiunile rapide. Pornire și Pauză acționează imediat; Oprește salvează durata, data și Notițele într-un comentariu ștergibil.",
   "tipsScheduleGuide": "Programați Pornire, Pauză sau Oprire cu Minute, Secunde ori Dată și oră, apoi Salvează. Anulați individual acțiunile deasupra Notițelor.",
   "tipsBulkGuide": "Acțiunile în masă mută sarcini, schimbă categorii sau stare, șterg ori creează și selectează un proiect nou.",
-  "tipsIndicatorsGuide": "Rândurile arată prioritate, progres, etichete, culoare, recurență și comentarii. Captura depinde de browser și dispozitiv."
+  "tipsIndicatorsGuide": "Rândurile arată prioritate, progres, etichete, culoare, recurență și comentarii. Captura depinde de browser și dispozitiv.",
+  "assignees": "Responsabili",
+  "assignTo": "Atribuie lui",
+  "assignToMe": "Atribuie-mi",
+  "searchAssignees": "Caută responsabili",
+  "unassign": "Elimină atribuirea"
 }

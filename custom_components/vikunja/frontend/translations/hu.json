@@ -22,6 +22,7 @@
   "addTask": "Feladat hozzáadása",
   "selectAll": "Összes kijelölése",
   "selected": "kijelölve",
+  "myTasks": "Saját feladataim",
   "filterTasks": "Feladatcímek szűrése",
   "project": "Projekt",
   "categories": "Kategóriák",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Adjon hozzá időzítőt a gyorsműveletekből. A Start és Szünet azonnali; a Leállítás az időt, dátumot és Jegyzeteket törölhető megjegyzésbe írja.",
   "tipsScheduleGuide": "Ütemezzen Start, Szünet vagy Leállítás műveletet Perc, Másodperc vagy Időbélyeg alapján, majd Mentés. Az akciók egyenként törölhetők a Jegyzetek felett.",
   "tipsBulkGuide": "A tömeges műveletek áthelyeznek, kategóriát vagy állapotot váltanak, törölnek, illetve új projektet hoznak létre és választanak ki.",
-  "tipsIndicatorsGuide": "A sorok prioritást, haladást, címkéket, színt, ismétlődést és megjegyzésszámot mutatnak. A rögzítés böngésző- és eszközfüggő."
+  "tipsIndicatorsGuide": "A sorok prioritást, haladást, címkéket, színt, ismétlődést és megjegyzésszámot mutatnak. A rögzítés böngésző- és eszközfüggő.",
+  "assignees": "Felelősök",
+  "assignTo": "Hozzárendelés",
+  "assignToMe": "Hozzám rendelés",
+  "searchAssignees": "Felelősök keresése",
+  "unassign": "Hozzárendelés törlése"
 }

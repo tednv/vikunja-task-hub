@@ -1,0 +1,127 @@
+create_task:
+  name: Create task
+  description: Create a task in a Vikunja project.
+  fields:
+    entry_id: &entry
+      name: Connection
+      required: true
+      selector:
+        config_entry:
+          integration: vikunja
+    project_id: &project
+      name: Project ID
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    title:
+      name: Title
+      required: true
+      selector:
+        text:
+    description:
+      name: Description
+      selector:
+        text:
+          multiline: true
+
+complete_task:
+  name: Complete task
+  description: Mark a Vikunja task complete.
+  fields:
+    entry_id: *entry
+    task_id: &task
+      name: Task ID
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+
+reopen_task:
+  name: Reopen task
+  description: Mark a completed Vikunja task active again.
+  fields:
+    entry_id: *entry
+    task_id: *task
+
+assign_task_to_me:
+  name: Assign task to me
+  description: Assign the task to the user authenticated by this Vikunja connection.
+  fields:
+    entry_id: *entry
+    task_id: *task
+
+unassign_task_from_me:
+  name: Unassign task from me
+  description: Remove the authenticated Vikunja user from the task's assignees.
+  fields:
+    entry_id: *entry
+    task_id: *task
+
+move_task:
+  name: Move task
+  description: Move a task to another Vikunja project.
+  fields:
+    entry_id: *entry
+    task_id: *task
+    project_id: *project
+
+set_task_due_date:
+  name: Set task due date
+  description: Set a task due date, or leave it empty to clear the due date.
+  fields:
+    entry_id: *entry
+    task_id: *task
+    due:
+      name: Due date
+      selector:
+        datetime:
+
+set_task_priority:
+  name: Set task priority
+  description: Set a Vikunja priority from unset through urgent.
+  fields:
+    entry_id: *entry
+    task_id: *task
+    priority:
+      name: Priority
+      required: true
+      selector:
+        select:
+          options:
+            - label: Unset
+              value: "0"
+            - label: Low
+              value: "1"
+            - label: Medium
+              value: "2"
+            - label: High
+              value: "3"
+            - label: Urgent
+              value: "4"
+            - label: Do now
+              value: "5"
+
+add_task_category:
+  name: Add task category
+  description: Add an existing Vikunja category to a task.
+  fields:
+    entry_id: *entry
+    task_id: *task
+    label_id: &label
+      name: Category ID
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+
+remove_task_category:
+  name: Remove task category
+  description: Remove a Vikunja category from a task without deleting either one.
+  fields:
+    entry_id: *entry
+    task_id: *task
+    label_id: *label

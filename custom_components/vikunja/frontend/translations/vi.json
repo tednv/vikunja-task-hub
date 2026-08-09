@@ -22,6 +22,7 @@
   "addTask": "Thêm công việc",
   "selectAll": "Chọn tất cả",
   "selected": "đã chọn",
+  "myTasks": "Công việc của tôi",
   "filterTasks": "Lọc tiêu đề công việc",
   "project": "Dự án",
   "categories": "Danh mục",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Thêm bộ hẹn giờ từ thao tác nhanh. Bắt đầu và Tạm dừng có hiệu lực ngay; Dừng ghi thời gian, ngày và Ghi chú vào bình luận có thể xóa.",
   "tipsScheduleGuide": "Lên lịch Bắt đầu, Tạm dừng hoặc Dừng bằng Phút, Giây hoặc Ngày và giờ rồi Lưu. Hủy từng thao tác phía trên Ghi chú.",
   "tipsBulkGuide": "Thao tác hàng loạt có thể di chuyển, đổi danh mục hoặc trạng thái, xóa, hoặc tạo và chọn dự án mới.",
-  "tipsIndicatorsGuide": "Dòng nhiệm vụ hiển thị ưu tiên, tiến độ, nhãn, màu, lặp lại và số bình luận. Chụp tệp phụ thuộc trình duyệt và thiết bị."
+  "tipsIndicatorsGuide": "Dòng nhiệm vụ hiển thị ưu tiên, tiến độ, nhãn, màu, lặp lại và số bình luận. Chụp tệp phụ thuộc trình duyệt và thiết bị.",
+  "assignees": "Người phụ trách",
+  "assignTo": "Giao cho",
+  "assignToMe": "Giao cho tôi",
+  "searchAssignees": "Tìm người phụ trách",
+  "unassign": "Bỏ giao việc"
 }

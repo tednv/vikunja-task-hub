@@ -22,6 +22,7 @@
   "addTask": "Aufgabe hinzufügen",
   "selectAll": "Alle auswählen",
   "selected": "ausgewählt",
+  "myTasks": "Meine Aufgaben",
   "filterTasks": "Aufgabentitel filtern",
   "project": "Projekt",
   "categories": "Kategorien",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Fügen Sie über Schnellaktionen einen Timer hinzu. Start und Pause wirken sofort; Stop speichert Zeit, Datum und Notizen als löschbaren Kommentar.",
   "tipsScheduleGuide": "Planen Sie Start, Pause oder Stop mit Minuten, Sekunden oder Zeitstempel und wählen Sie Speichern. Gespeicherte Aktionen lassen sich einzeln über Notizen abbrechen.",
   "tipsBulkGuide": "Sammelaktionen verschieben Aufgaben, ändern Kategorien oder Status, löschen oder erstellen und wählen ein neues Projekt.",
-  "tipsIndicatorsGuide": "Aufgabenzeilen zeigen Priorität, Fortschritt, Labels, Farbe, Wiederholung und Kommentarzahl. Medienaufnahme hängt von Browser und Gerät ab."
+  "tipsIndicatorsGuide": "Aufgabenzeilen zeigen Priorität, Fortschritt, Labels, Farbe, Wiederholung und Kommentarzahl. Medienaufnahme hängt von Browser und Gerät ab.",
+  "assignees": "Verantwortliche",
+  "assignTo": "Zuweisen an",
+  "assignToMe": "Mir zuweisen",
+  "searchAssignees": "Verantwortliche suchen",
+  "unassign": "Zuweisung aufheben"
 }

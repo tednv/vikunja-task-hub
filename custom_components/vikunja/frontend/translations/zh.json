@@ -22,6 +22,7 @@
   "addTask": "添加任务",
   "selectAll": "全选",
   "selected": "已选择",
+  "myTasks": "我的任务",
   "filterTasks": "筛选任务标题",
   "project": "项目",
   "categories": "分类",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "从快捷操作添加计时器。开始和暂停立即生效；停止会把时长、日期和备注写入可删除的评论。",
   "tipsScheduleGuide": "选择开始、暂停或停止，再选择分钟、秒或日期和时间，输入值并保存。可在备注上方逐项取消已保存操作。",
   "tipsBulkGuide": "批量操作可移动任务、更改分类或状态、删除任务，或创建并选择新项目。",
-  "tipsIndicatorsGuide": "任务行会显示优先级、进度、标签、颜色、重复和评论数。附件拍摄取决于浏览器和设备。"
+  "tipsIndicatorsGuide": "任务行会显示优先级、进度、标签、颜色、重复和评论数。附件拍摄取决于浏览器和设备。",
+  "assignees": "负责人",
+  "assignTo": "分配给",
+  "assignToMe": "分配给我",
+  "searchAssignees": "搜索负责人",
+  "unassign": "取消分配"
 }

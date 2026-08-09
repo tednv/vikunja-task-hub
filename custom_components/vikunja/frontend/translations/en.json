@@ -22,6 +22,7 @@
   "addTask": "Add task",
   "selectAll": "Select all",
   "selected": "selected",
+  "myTasks": "My Tasks",
   "filterTasks": "Filter task titles",
   "project": "Project",
   "categories": "Categories",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Add a timer from task quick actions. Start and Pause act immediately; Stop records elapsed time, date, and Notes in a removable comment.",
   "tipsScheduleGuide": "Schedule Start, Pause, or Stop with Minutes, Seconds, or Timestamp, then Save. Cancel saved actions individually above Notes.",
   "tipsBulkGuide": "Bulk actions can move tasks, change categories or status, delete tasks, or create and select a new project.",
-  "tipsIndicatorsGuide": "Task rows show priority, progress, labels, color, recurrence, and comment counts when set. Attachment capture depends on the browser and device."
+  "tipsIndicatorsGuide": "Task rows show priority, progress, labels, color, recurrence, and comment counts when set. Attachment capture depends on the browser and device.",
+  "assignees": "Assignees",
+  "assignTo": "Assign to",
+  "assignToMe": "Assign to me",
+  "searchAssignees": "Search assignees",
+  "unassign": "Unassign"
 }

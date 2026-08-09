@@ -91,12 +91,16 @@ Vikunja Task Hub follows the language selected in Home Assistant and falls back 
 
 - Add tasks without leaving the dashboard.
 - Search task titles as you type without interrupting keyboard focus.
+- Toggle **My Tasks (N)** beside selection controls whenever the current project/category view contains tasks assigned to the authenticated user.
 - Sort higher-priority tasks first, then newest first within the same priority, and keep completed tasks in a separate collapsible section.
 - Open any task to edit its title, description, due date, labels, priority, progress, color, recurrence, and completion state.
 - Write Markdown descriptions with shortcuts for headings, emphasis, lists, quotes, links, and inline code.
 - Preview formatted descriptions before saving.
 - Complete, reactivate, move, or permanently delete tasks.
 - Right-click or long-press a task for quick completion, priority, copy, share, and delete actions. Sharing uses the device's native share sheet when available and falls back to the clipboard.
+- Assign one or more eligible project users from task details or the task quick-action menu. Assigned names remain compact on task rows, and each assignment can be removed independently.
+- Use stable Home Assistant event targets for assignment, completion, reopening, movement, comment, attachment, project, category, and timer triggers—without creating entities for individual tasks or projects.
+- Update Vikunja from automations with actions for task creation, completion, reopening, self-assignment, movement, due dates, priority, and categories. The automation guide includes a ready-to-paste **assigned to me** notification example.
 - Expand comments only on tasks that have them, without loading comment bodies into the main task request.
 - Open a bundled, language-matched Tips & Documentation guide from the card footer for plain-language guidance and quick references covering task editing, selection, bulk actions, comments, attachments, indicators, and timers.
 - Track time independently on each task with restart-safe **Start**, **Pause**, **Stop**, and **Cancel** controls. Optional notes persist with the timer and are included with the duration and date in the removable completion comment.
@@ -304,6 +308,7 @@ Additional roadmap ideas will be discussed before they are added here.
 ## Development
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Home Assistant automations](docs/AUTOMATIONS.md)
 - [Development and validation](docs/DEVELOPMENT.md)
 - [Release process](docs/RELEASING.md)
 - [Repository settings](docs/REPOSITORY_SETUP.md)

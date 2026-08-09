@@ -22,6 +22,7 @@
   "addTask": "Taak toevoegen",
   "selectAll": "Alles selecteren",
   "selected": "geselecteerd",
+  "myTasks": "Mijn taken",
   "filterTasks": "Taaktitels filteren",
   "project": "Project",
   "categories": "Categorieën",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Voeg via snelle acties een timer toe. Start en Pauze werken direct; Stop slaat tijd, datum en Notities op in een verwijderbare opmerking.",
   "tipsScheduleGuide": "Plan Start, Pauze of Stop met Minuten, Seconden of Datum en tijd en kies Opslaan. Annuleer opgeslagen acties afzonderlijk boven Notities.",
   "tipsBulkGuide": "Bulkacties verplaatsen taken, wijzigen categorie of status, verwijderen, of maken en selecteren een nieuw project.",
-  "tipsIndicatorsGuide": "Taakregels tonen prioriteit, voortgang, labels, kleur, herhaling en opmerkingenaantal. Bijlage-opname hangt af van browser en apparaat."
+  "tipsIndicatorsGuide": "Taakregels tonen prioriteit, voortgang, labels, kleur, herhaling en opmerkingenaantal. Bijlage-opname hangt af van browser en apparaat.",
+  "assignees": "Toegewezen personen",
+  "assignTo": "Toewijzen aan",
+  "assignToMe": "Aan mij toewijzen",
+  "searchAssignees": "Toegewezen personen zoeken",
+  "unassign": "Toewijzing verwijderen"
 }

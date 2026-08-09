@@ -24,6 +24,7 @@ export const TRANSLATIONS = {
     "addTask": "إضافة مهمة",
     "selectAll": "تحديد الكل",
     "selected": "محدد",
+    "myTasks": "مهامي",
     "filterTasks": "تصفية عناوين المهام",
     "project": "المشروع",
     "categories": "الفئات",
@@ -130,7 +131,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "أضف مؤقتاً من الإجراءات السريعة. يعمل البدء والإيقاف المؤقت فوراً؛ ويسجل الإيقاف المدة والتاريخ والملاحظات في تعليق قابل للحذف.",
     "tipsScheduleGuide": "جدول البدء أو الإيقاف المؤقت أو الإيقاف بالدقائق أو الثواني أو التاريخ والوقت ثم احفظ. ألغِ كل إجراء فوق الملاحظات بشكل مستقل.",
     "tipsBulkGuide": "تنقل الإجراءات الجماعية المهام وتغير التصنيف أو الحالة وتحذف أو تنشئ مشروعاً جديداً وتحدده.",
-    "tipsIndicatorsGuide": "تعرض صفوف المهام الأولوية والتقدم والتسميات واللون والتكرار وعدد التعليقات. يعتمد التقاط المرفقات على المتصفح والجهاز."
+    "tipsIndicatorsGuide": "تعرض صفوف المهام الأولوية والتقدم والتسميات واللون والتكرار وعدد التعليقات. يعتمد التقاط المرفقات على المتصفح والجهاز.",
+    "assignees": "المسؤولون",
+    "assignTo": "تعيين إلى",
+    "assignToMe": "تعيين إليّ",
+    "searchAssignees": "البحث عن المسؤولين",
+    "unassign": "إلغاء التعيين"
   },
   "bn": {
     "labels": "লেবেল",
@@ -156,6 +162,7 @@ export const TRANSLATIONS = {
     "addTask": "কাজ যোগ করুন",
     "selectAll": "সব নির্বাচন করুন",
     "selected": "নির্বাচিত",
+    "myTasks": "আমার কাজগুলি",
     "filterTasks": "কাজের শিরোনাম ফিল্টার করুন",
     "project": "প্রকল্প",
     "categories": "বিভাগ",
@@ -262,7 +269,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "দ্রুত কাজ থেকে টাইমার যোগ করুন। শুরু ও বিরতি সঙ্গে সঙ্গে কাজ করে; থামান সময়, তারিখ ও নোট মুছতে পারা মন্তব্যে লেখে।",
     "tipsScheduleGuide": "মিনিট, সেকেন্ড বা তারিখ ও সময় দিয়ে শুরু, বিরতি বা থামান নির্ধারণ করে সংরক্ষণ করুন। নোটের উপরে প্রতিটি কাজ আলাদাভাবে বাতিল করুন।",
     "tipsBulkGuide": "একাধিক কাজ সরানো, বিভাগ বা অবস্থা বদলানো, মুছে ফেলা অথবা নতুন প্রকল্প তৈরি ও নির্বাচন করা যায়।",
-    "tipsIndicatorsGuide": "কাজের সারিতে অগ্রাধিকার, অগ্রগতি, লেবেল, রং, পুনরাবৃত্তি ও মন্তব্য সংখ্যা দেখা যায়। সংযুক্তি ধারণ ব্রাউজার ও ডিভাইসের উপর নির্ভর করে।"
+    "tipsIndicatorsGuide": "কাজের সারিতে অগ্রাধিকার, অগ্রগতি, লেবেল, রং, পুনরাবৃত্তি ও মন্তব্য সংখ্যা দেখা যায়। সংযুক্তি ধারণ ব্রাউজার ও ডিভাইসের উপর নির্ভর করে।",
+    "assignees": "দায়িত্বপ্রাপ্ত",
+    "assignTo": "দায়িত্ব দিন",
+    "assignToMe": "আমাকে দিন",
+    "searchAssignees": "দায়িত্বপ্রাপ্ত খুঁজুন",
+    "unassign": "দায়িত্ব সরান"
   },
   "de": {
     "labels": "Etiketten",
@@ -288,6 +300,7 @@ export const TRANSLATIONS = {
     "addTask": "Aufgabe hinzufügen",
     "selectAll": "Alle auswählen",
     "selected": "ausgewählt",
+    "myTasks": "Meine Aufgaben",
     "filterTasks": "Aufgabentitel filtern",
     "project": "Projekt",
     "categories": "Kategorien",
@@ -394,7 +407,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Fügen Sie über Schnellaktionen einen Timer hinzu. Start und Pause wirken sofort; Stop speichert Zeit, Datum und Notizen als löschbaren Kommentar.",
     "tipsScheduleGuide": "Planen Sie Start, Pause oder Stop mit Minuten, Sekunden oder Zeitstempel und wählen Sie Speichern. Gespeicherte Aktionen lassen sich einzeln über Notizen abbrechen.",
     "tipsBulkGuide": "Sammelaktionen verschieben Aufgaben, ändern Kategorien oder Status, löschen oder erstellen und wählen ein neues Projekt.",
-    "tipsIndicatorsGuide": "Aufgabenzeilen zeigen Priorität, Fortschritt, Labels, Farbe, Wiederholung und Kommentarzahl. Medienaufnahme hängt von Browser und Gerät ab."
+    "tipsIndicatorsGuide": "Aufgabenzeilen zeigen Priorität, Fortschritt, Labels, Farbe, Wiederholung und Kommentarzahl. Medienaufnahme hängt von Browser und Gerät ab.",
+    "assignees": "Verantwortliche",
+    "assignTo": "Zuweisen an",
+    "assignToMe": "Mir zuweisen",
+    "searchAssignees": "Verantwortliche suchen",
+    "unassign": "Zuweisung aufheben"
   },
   "el": {
     "labels": "Ετικέτες",
@@ -420,6 +438,7 @@ export const TRANSLATIONS = {
     "addTask": "Προσθήκη εργασίας",
     "selectAll": "Επιλογή όλων",
     "selected": "επιλεγμένες",
+    "myTasks": "Οι εργασίες μου",
     "filterTasks": "Φιλτράρισμα τίτλων εργασιών",
     "project": "Έργο",
     "categories": "Κατηγορίες",
@@ -526,7 +545,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Προσθέστε χρονόμετρο από τις γρήγορες ενέργειες. Έναρξη και Παύση δρουν άμεσα· Διακοπή γράφει χρόνο, ημερομηνία και Σημειώσεις σε διαγράψιμο σχόλιο.",
     "tipsScheduleGuide": "Προγραμματίστε Έναρξη, Παύση ή Διακοπή με Λεπτά, Δευτερόλεπτα ή Χρονική στιγμή και Αποθήκευση. Ακυρώστε κάθε ενέργεια πάνω από τις Σημειώσεις.",
     "tipsBulkGuide": "Οι μαζικές ενέργειες μετακινούν εργασίες, αλλάζουν κατηγορία ή κατάσταση, διαγράφουν ή δημιουργούν και επιλέγουν νέο έργο.",
-    "tipsIndicatorsGuide": "Οι σειρές δείχνουν προτεραιότητα, πρόοδο, ετικέτες, χρώμα, επανάληψη και σχόλια. Η λήψη εξαρτάται από πρόγραμμα περιήγησης και συσκευή."
+    "tipsIndicatorsGuide": "Οι σειρές δείχνουν προτεραιότητα, πρόοδο, ετικέτες, χρώμα, επανάληψη και σχόλια. Η λήψη εξαρτάται από πρόγραμμα περιήγησης και συσκευή.",
+    "assignees": "Υπεύθυνοι",
+    "assignTo": "Ανάθεση σε",
+    "assignToMe": "Ανάθεση σε εμένα",
+    "searchAssignees": "Αναζήτηση υπευθύνων",
+    "unassign": "Κατάργηση ανάθεσης"
   },
   "en": {
     "labels": "Labels",
@@ -552,6 +576,7 @@ export const TRANSLATIONS = {
     "addTask": "Add task",
     "selectAll": "Select all",
     "selected": "selected",
+    "myTasks": "My Tasks",
     "filterTasks": "Filter task titles",
     "project": "Project",
     "categories": "Categories",
@@ -658,7 +683,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Add a timer from task quick actions. Start and Pause act immediately; Stop records elapsed time, date, and Notes in a removable comment.",
     "tipsScheduleGuide": "Schedule Start, Pause, or Stop with Minutes, Seconds, or Timestamp, then Save. Cancel saved actions individually above Notes.",
     "tipsBulkGuide": "Bulk actions can move tasks, change categories or status, delete tasks, or create and select a new project.",
-    "tipsIndicatorsGuide": "Task rows show priority, progress, labels, color, recurrence, and comment counts when set. Attachment capture depends on the browser and device."
+    "tipsIndicatorsGuide": "Task rows show priority, progress, labels, color, recurrence, and comment counts when set. Attachment capture depends on the browser and device.",
+    "assignees": "Assignees",
+    "assignTo": "Assign to",
+    "assignToMe": "Assign to me",
+    "searchAssignees": "Search assignees",
+    "unassign": "Unassign"
   },
   "es": {
     "labels": "Etiquetas",
@@ -684,6 +714,7 @@ export const TRANSLATIONS = {
     "addTask": "Añadir tarea",
     "selectAll": "Seleccionar todo",
     "selected": "seleccionadas",
+    "myTasks": "Mis tareas",
     "filterTasks": "Filtrar títulos de tareas",
     "project": "Proyecto",
     "categories": "Categorías",
@@ -790,7 +821,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Añada un temporizador desde las acciones rápidas. Iniciar y Pausar actúan al instante; Detener guarda tiempo, fecha y Notas en un comentario eliminable.",
     "tipsScheduleGuide": "Programe Iniciar, Pausar o Detener con Minutos, Segundos o Fecha y hora y pulse Guardar. Cancele cada acción guardada sobre Notas.",
     "tipsBulkGuide": "Las acciones masivas permiten mover tareas, cambiar categorías o estado, eliminar o crear y seleccionar un proyecto nuevo.",
-    "tipsIndicatorsGuide": "Las filas muestran prioridad, progreso, etiquetas, color, repetición y cantidad de comentarios. La captura de adjuntos depende del navegador y dispositivo."
+    "tipsIndicatorsGuide": "Las filas muestran prioridad, progreso, etiquetas, color, repetición y cantidad de comentarios. La captura de adjuntos depende del navegador y dispositivo.",
+    "assignees": "Responsables",
+    "assignTo": "Asignar a",
+    "assignToMe": "Asignarme",
+    "searchAssignees": "Buscar responsables",
+    "unassign": "Desasignar"
   },
   "fa": {
     "labels": "برچسب‌ها",
@@ -816,6 +852,7 @@ export const TRANSLATIONS = {
     "addTask": "افزودن وظیفه",
     "selectAll": "انتخاب همه",
     "selected": "انتخاب‌شده",
+    "myTasks": "کارهای من",
     "filterTasks": "فیلتر عنوان وظایف",
     "project": "پروژه",
     "categories": "دسته‌ها",
@@ -922,7 +959,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "از اقدامات سریع زمان‌سنج اضافه کنید. شروع و مکث فوری‌اند؛ توقف، زمان، تاریخ و یادداشت‌ها را در نظری قابل حذف ثبت می‌کند.",
     "tipsScheduleGuide": "شروع، مکث یا توقف را با دقیقه، ثانیه یا تاریخ و زمان تنظیم و ذخیره کنید. هر اقدام ذخیره‌شده را بالای یادداشت‌ها جداگانه لغو کنید.",
     "tipsBulkGuide": "عملیات گروهی وظایف را جابه‌جا می‌کند، دسته یا وضعیت را تغییر می‌دهد، حذف می‌کند یا پروژه‌ای جدید می‌سازد و انتخاب می‌کند.",
-    "tipsIndicatorsGuide": "ردیف وظیفه اولویت، پیشرفت، برچسب، رنگ، تکرار و تعداد نظرات را نشان می‌دهد. ثبت پیوست به مرورگر و دستگاه بستگی دارد."
+    "tipsIndicatorsGuide": "ردیف وظیفه اولویت، پیشرفت، برچسب، رنگ، تکرار و تعداد نظرات را نشان می‌دهد. ثبت پیوست به مرورگر و دستگاه بستگی دارد.",
+    "assignees": "مسئولان",
+    "assignTo": "واگذاری به",
+    "assignToMe": "واگذاری به من",
+    "searchAssignees": "جستجوی مسئولان",
+    "unassign": "لغو واگذاری"
   },
   "fr": {
     "labels": "Étiquettes",
@@ -948,6 +990,7 @@ export const TRANSLATIONS = {
     "addTask": "Ajouter une tâche",
     "selectAll": "Tout sélectionner",
     "selected": "sélectionnées",
+    "myTasks": "Mes tâches",
     "filterTasks": "Filtrer les titres",
     "project": "Projet",
     "categories": "Catégories",
@@ -1054,7 +1097,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Ajoutez un minuteur depuis les actions rapides. Démarrer et Pause agissent immédiatement ; Arrêter enregistre durée, date et Notes dans un commentaire supprimable.",
     "tipsScheduleGuide": "Planifiez Démarrer, Pause ou Arrêter avec Minutes, Secondes ou Date et heure, puis Enregistrer. Annulez chaque action au-dessus des Notes.",
     "tipsBulkGuide": "Les actions groupées déplacent les tâches, changent catégories ou état, suppriment, ou créent et sélectionnent un projet.",
-    "tipsIndicatorsGuide": "Les lignes affichent priorité, progression, étiquettes, couleur, récurrence et nombre de commentaires. La capture dépend du navigateur et de l'appareil."
+    "tipsIndicatorsGuide": "Les lignes affichent priorité, progression, étiquettes, couleur, récurrence et nombre de commentaires. La capture dépend du navigateur et de l'appareil.",
+    "assignees": "Responsables",
+    "assignTo": "Attribuer à",
+    "assignToMe": "Me l’attribuer",
+    "searchAssignees": "Rechercher des responsables",
+    "unassign": "Retirer l’attribution"
   },
   "ga": {
     "labels": "Lipéid",
@@ -1080,6 +1128,7 @@ export const TRANSLATIONS = {
     "addTask": "Cuir tasc leis",
     "selectAll": "Roghnaigh uile",
     "selected": "roghnaithe",
+    "myTasks": "Mo thascanna",
     "filterTasks": "Scag teidil tascanna",
     "project": "Tionscadal",
     "categories": "Catagóirí",
@@ -1186,7 +1235,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Cuir amadóir leis ó ghníomhartha tapa. Gníomhaíonn Tosaigh agus Sos láithreach; scríobhann Stop an t-am, dáta agus Nótaí i nóta tráchta inscriosta.",
     "tipsScheduleGuide": "Sceideal Tosaigh, Sos nó Stop le Nóiméid, Soicindí nó Dáta agus am, ansin Sábháil. Cealaigh gach gníomh os cionn Nótaí ar leithligh.",
     "tipsBulkGuide": "Bogann gníomhartha bulc tascanna, athraíonn siad catagóirí nó stádas, scriosann siad, nó cruthaíonn agus roghnaíonn siad tionscadal nua.",
-    "tipsIndicatorsGuide": "Taispeánann sraitheanna tosaíocht, dul chun cinn, lipéid, dath, athdhéanamh agus líon nótaí tráchta. Braitheann gabháil ceangaltáin ar an mbrabhsálaí agus gléas."
+    "tipsIndicatorsGuide": "Taispeánann sraitheanna tosaíocht, dul chun cinn, lipéid, dath, athdhéanamh agus líon nótaí tráchta. Braitheann gabháil ceangaltáin ar an mbrabhsálaí agus gléas.",
+    "assignees": "Sannaithe",
+    "assignTo": "Sann do",
+    "assignToMe": "Sann domsa",
+    "searchAssignees": "Cuardaigh sannaithe",
+    "unassign": "Díshann"
   },
   "hi": {
     "labels": "लेबल",
@@ -1212,6 +1266,7 @@ export const TRANSLATIONS = {
     "addTask": "कार्य जोड़ें",
     "selectAll": "सभी चुनें",
     "selected": "चयनित",
+    "myTasks": "मेरे कार्य",
     "filterTasks": "कार्य शीर्षक फ़िल्टर करें",
     "project": "प्रोजेक्ट",
     "categories": "श्रेणियाँ",
@@ -1318,7 +1373,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "त्वरित कार्रवाइयों से टाइमर जोड़ें। शुरू और विराम तुरंत काम करते हैं; रोकें समय, तारीख और नोट्स को हटाई जा सकने वाली टिप्पणी में लिखता है।",
     "tipsScheduleGuide": "मिनट, सेकंड या तारीख और समय से शुरू, विराम या रोकें तय करके सहेजें। नोट्स के ऊपर हर सहेजी कार्रवाई अलग से रद्द करें।",
     "tipsBulkGuide": "सामूहिक कार्रवाइयाँ कार्य स्थानांतरित करती हैं, श्रेणी या स्थिति बदलती हैं, हटाती हैं, या नया प्रोजेक्ट बनाकर चुनती हैं।",
-    "tipsIndicatorsGuide": "कार्य पंक्तियाँ प्राथमिकता, प्रगति, लेबल, रंग, दोहराव और टिप्पणी संख्या दिखाती हैं। संलग्नक कैप्चर ब्राउज़र और डिवाइस पर निर्भर है।"
+    "tipsIndicatorsGuide": "कार्य पंक्तियाँ प्राथमिकता, प्रगति, लेबल, रंग, दोहराव और टिप्पणी संख्या दिखाती हैं। संलग्नक कैप्चर ब्राउज़र और डिवाइस पर निर्भर है।",
+    "assignees": "असाइनी",
+    "assignTo": "इन्हें सौंपें",
+    "assignToMe": "मुझे सौंपें",
+    "searchAssignees": "असाइनी खोजें",
+    "unassign": "असाइनमेंट हटाएँ"
   },
   "hu": {
     "labels": "Címkék",
@@ -1344,6 +1404,7 @@ export const TRANSLATIONS = {
     "addTask": "Feladat hozzáadása",
     "selectAll": "Összes kijelölése",
     "selected": "kijelölve",
+    "myTasks": "Saját feladataim",
     "filterTasks": "Feladatcímek szűrése",
     "project": "Projekt",
     "categories": "Kategóriák",
@@ -1450,7 +1511,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Adjon hozzá időzítőt a gyorsműveletekből. A Start és Szünet azonnali; a Leállítás az időt, dátumot és Jegyzeteket törölhető megjegyzésbe írja.",
     "tipsScheduleGuide": "Ütemezzen Start, Szünet vagy Leállítás műveletet Perc, Másodperc vagy Időbélyeg alapján, majd Mentés. Az akciók egyenként törölhetők a Jegyzetek felett.",
     "tipsBulkGuide": "A tömeges műveletek áthelyeznek, kategóriát vagy állapotot váltanak, törölnek, illetve új projektet hoznak létre és választanak ki.",
-    "tipsIndicatorsGuide": "A sorok prioritást, haladást, címkéket, színt, ismétlődést és megjegyzésszámot mutatnak. A rögzítés böngésző- és eszközfüggő."
+    "tipsIndicatorsGuide": "A sorok prioritást, haladást, címkéket, színt, ismétlődést és megjegyzésszámot mutatnak. A rögzítés böngésző- és eszközfüggő.",
+    "assignees": "Felelősök",
+    "assignTo": "Hozzárendelés",
+    "assignToMe": "Hozzám rendelés",
+    "searchAssignees": "Felelősök keresése",
+    "unassign": "Hozzárendelés törlése"
   },
   "id": {
     "labels": "Label",
@@ -1476,6 +1542,7 @@ export const TRANSLATIONS = {
     "addTask": "Tambah tugas",
     "selectAll": "Pilih semua",
     "selected": "dipilih",
+    "myTasks": "Tugas Saya",
     "filterTasks": "Saring judul tugas",
     "project": "Proyek",
     "categories": "Kategori",
@@ -1582,7 +1649,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Tambahkan timer dari tindakan cepat. Mulai dan Jeda langsung bekerja; Hentikan mencatat waktu, tanggal, dan Catatan dalam komentar yang dapat dihapus.",
     "tipsScheduleGuide": "Jadwalkan Mulai, Jeda, atau Hentikan dengan Menit, Detik, atau Tanggal dan waktu, lalu Simpan. Batalkan tindakan satu per satu di atas Catatan.",
     "tipsBulkGuide": "Tindakan massal memindahkan tugas, mengubah kategori atau status, menghapus, atau membuat dan memilih proyek baru.",
-    "tipsIndicatorsGuide": "Baris menampilkan prioritas, kemajuan, label, warna, pengulangan, dan jumlah komentar. Pengambilan lampiran bergantung pada browser dan perangkat."
+    "tipsIndicatorsGuide": "Baris menampilkan prioritas, kemajuan, label, warna, pengulangan, dan jumlah komentar. Pengambilan lampiran bergantung pada browser dan perangkat.",
+    "assignees": "Penanggung jawab",
+    "assignTo": "Tetapkan ke",
+    "assignToMe": "Tetapkan kepada saya",
+    "searchAssignees": "Cari penanggung jawab",
+    "unassign": "Batalkan penetapan"
   },
   "it": {
     "labels": "Etichette",
@@ -1608,6 +1680,7 @@ export const TRANSLATIONS = {
     "addTask": "Aggiungi attività",
     "selectAll": "Seleziona tutto",
     "selected": "selezionate",
+    "myTasks": "Le mie attività",
     "filterTasks": "Filtra i titoli delle attività",
     "project": "Progetto",
     "categories": "Categorie",
@@ -1714,7 +1787,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Aggiungi un timer dalle azioni rapide. Avvia e Pausa agiscono subito; Ferma registra durata, data e Note in un commento eliminabile.",
     "tipsScheduleGuide": "Pianifica Avvia, Pausa o Ferma con Minuti, Secondi o Data e ora, poi Salva. Annulla singolarmente le azioni sopra Note.",
     "tipsBulkGuide": "Le azioni di massa spostano attività, cambiano categorie o stato, eliminano o creano e selezionano un nuovo progetto.",
-    "tipsIndicatorsGuide": "Le righe mostrano priorità, avanzamento, etichette, colore, ricorrenza e commenti. La cattura allegati dipende da browser e dispositivo."
+    "tipsIndicatorsGuide": "Le righe mostrano priorità, avanzamento, etichette, colore, ricorrenza e commenti. La cattura allegati dipende da browser e dispositivo.",
+    "assignees": "Assegnatari",
+    "assignTo": "Assegna a",
+    "assignToMe": "Assegna a me",
+    "searchAssignees": "Cerca assegnatari",
+    "unassign": "Rimuovi assegnazione"
   },
   "ja": {
     "labels": "ラベル",
@@ -1740,6 +1818,7 @@ export const TRANSLATIONS = {
     "addTask": "タスクを追加",
     "selectAll": "すべて選択",
     "selected": "件選択",
+    "myTasks": "自分のタスク",
     "filterTasks": "タスク名を絞り込む",
     "project": "プロジェクト",
     "categories": "カテゴリー",
@@ -1846,7 +1925,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "クイック操作からタイマーを追加します。開始と一時停止は即時実行され、停止は時間、日付、メモを削除可能なコメントに記録します。",
     "tipsScheduleGuide": "分、秒、または日時を使って開始、一時停止、停止を指定し、保存します。メモの上で保存済み操作を個別に取り消せます。",
     "tipsBulkGuide": "一括操作では、移動、カテゴリや状態の変更、削除、新しいプロジェクトの作成と選択ができます。",
-    "tipsIndicatorsGuide": "タスク行には優先度、進捗、ラベル、色、繰り返し、コメント数が表示されます。添付ファイルの撮影はブラウザと端末によります。"
+    "tipsIndicatorsGuide": "タスク行には優先度、進捗、ラベル、色、繰り返し、コメント数が表示されます。添付ファイルの撮影はブラウザと端末によります。",
+    "assignees": "担当者",
+    "assignTo": "担当者に設定",
+    "assignToMe": "自分に割り当てる",
+    "searchAssignees": "担当者を検索",
+    "unassign": "割り当てを解除"
   },
   "ko": {
     "labels": "레이블",
@@ -1872,6 +1956,7 @@ export const TRANSLATIONS = {
     "addTask": "작업 추가",
     "selectAll": "모두 선택",
     "selected": "개 선택됨",
+    "myTasks": "내 작업",
     "filterTasks": "작업 제목 필터",
     "project": "프로젝트",
     "categories": "카테고리",
@@ -1978,7 +2063,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "빠른 작업에서 타이머를 추가하세요. 시작과 일시정지는 즉시 실행되며, 중지는 시간, 날짜와 메모를 삭제 가능한 댓글로 기록합니다.",
     "tipsScheduleGuide": "분, 초 또는 날짜 및 시간으로 시작, 일시정지, 중지를 정하고 저장하세요. 메모 위에서 저장된 작업을 개별 취소할 수 있습니다.",
     "tipsBulkGuide": "일괄 작업으로 이동, 범주나 상태 변경, 삭제, 새 프로젝트 생성 및 선택을 할 수 있습니다.",
-    "tipsIndicatorsGuide": "작업 행에는 우선순위, 진행률, 라벨, 색상, 반복과 댓글 수가 표시됩니다. 첨부 파일 촬영은 브라우저와 기기에 따라 다릅니다."
+    "tipsIndicatorsGuide": "작업 행에는 우선순위, 진행률, 라벨, 색상, 반복과 댓글 수가 표시됩니다. 첨부 파일 촬영은 브라우저와 기기에 따라 다릅니다.",
+    "assignees": "담당자",
+    "assignTo": "할당 대상",
+    "assignToMe": "나에게 할당",
+    "searchAssignees": "담당자 검색",
+    "unassign": "할당 해제"
   },
   "nl": {
     "labels": "Labels",
@@ -2004,6 +2094,7 @@ export const TRANSLATIONS = {
     "addTask": "Taak toevoegen",
     "selectAll": "Alles selecteren",
     "selected": "geselecteerd",
+    "myTasks": "Mijn taken",
     "filterTasks": "Taaktitels filteren",
     "project": "Project",
     "categories": "Categorieën",
@@ -2110,7 +2201,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Voeg via snelle acties een timer toe. Start en Pauze werken direct; Stop slaat tijd, datum en Notities op in een verwijderbare opmerking.",
     "tipsScheduleGuide": "Plan Start, Pauze of Stop met Minuten, Seconden of Datum en tijd en kies Opslaan. Annuleer opgeslagen acties afzonderlijk boven Notities.",
     "tipsBulkGuide": "Bulkacties verplaatsen taken, wijzigen categorie of status, verwijderen, of maken en selecteren een nieuw project.",
-    "tipsIndicatorsGuide": "Taakregels tonen prioriteit, voortgang, labels, kleur, herhaling en opmerkingenaantal. Bijlage-opname hangt af van browser en apparaat."
+    "tipsIndicatorsGuide": "Taakregels tonen prioriteit, voortgang, labels, kleur, herhaling en opmerkingenaantal. Bijlage-opname hangt af van browser en apparaat.",
+    "assignees": "Toegewezen personen",
+    "assignTo": "Toewijzen aan",
+    "assignToMe": "Aan mij toewijzen",
+    "searchAssignees": "Toegewezen personen zoeken",
+    "unassign": "Toewijzing verwijderen"
   },
   "pl": {
     "labels": "Etykiety",
@@ -2136,6 +2232,7 @@ export const TRANSLATIONS = {
     "addTask": "Dodaj zadanie",
     "selectAll": "Zaznacz wszystko",
     "selected": "zaznaczono",
+    "myTasks": "Moje zadania",
     "filterTasks": "Filtruj tytuły zadań",
     "project": "Projekt",
     "categories": "Kategorie",
@@ -2242,7 +2339,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Dodaj minutnik z szybkich działań. Start i Pauza działają natychmiast; Zatrzymaj zapisuje czas, datę i Notatki w usuwalnym komentarzu.",
     "tipsScheduleGuide": "Zaplanuj Start, Pauzę lub Zatrzymanie przez Minuty, Sekundy albo Datę i czas, potem Zapisz. Anuluj każdą akcję nad Notatkami.",
     "tipsBulkGuide": "Działania zbiorcze przenoszą zadania, zmieniają kategorie lub stan, usuwają albo tworzą i wybierają nowy projekt.",
-    "tipsIndicatorsGuide": "Wiersze pokazują priorytet, postęp, etykiety, kolor, cykliczność i liczbę komentarzy. Przechwytywanie zależy od przeglądarki i urządzenia."
+    "tipsIndicatorsGuide": "Wiersze pokazują priorytet, postęp, etykiety, kolor, cykliczność i liczbę komentarzy. Przechwytywanie zależy od przeglądarki i urządzenia.",
+    "assignees": "Osoby przypisane",
+    "assignTo": "Przypisz do",
+    "assignToMe": "Przypisz do mnie",
+    "searchAssignees": "Szukaj osób",
+    "unassign": "Cofnij przypisanie"
   },
   "pt": {
     "labels": "Etiquetas",
@@ -2268,6 +2370,7 @@ export const TRANSLATIONS = {
     "addTask": "Adicionar tarefa",
     "selectAll": "Selecionar tudo",
     "selected": "selecionadas",
+    "myTasks": "Minhas tarefas",
     "filterTasks": "Filtrar títulos das tarefas",
     "project": "Projeto",
     "categories": "Categorias",
@@ -2374,7 +2477,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Adicione um temporizador nas ações rápidas. Iniciar e Pausa agem imediatamente; Parar regista tempo, data e Notas num comentário removível.",
     "tipsScheduleGuide": "Agende Iniciar, Pausa ou Parar com Minutos, Segundos ou Data e hora e escolha Guardar. Cancele ações individualmente acima de Notas.",
     "tipsBulkGuide": "Ações em massa movem tarefas, alteram categorias ou estado, eliminam ou criam e selecionam um novo projeto.",
-    "tipsIndicatorsGuide": "As linhas mostram prioridade, progresso, etiquetas, cor, recorrência e comentários. A captura de anexos depende do navegador e dispositivo."
+    "tipsIndicatorsGuide": "As linhas mostram prioridade, progresso, etiquetas, cor, recorrência e comentários. A captura de anexos depende do navegador e dispositivo.",
+    "assignees": "Responsáveis",
+    "assignTo": "Atribuir a",
+    "assignToMe": "Atribuir a mim",
+    "searchAssignees": "Pesquisar responsáveis",
+    "unassign": "Remover atribuição"
   },
   "ro": {
     "labels": "Etichete",
@@ -2400,6 +2508,7 @@ export const TRANSLATIONS = {
     "addTask": "Adaugă sarcină",
     "selectAll": "Selectează tot",
     "selected": "selectate",
+    "myTasks": "Sarcinile mele",
     "filterTasks": "Filtrează titlurile sarcinilor",
     "project": "Proiect",
     "categories": "Categorii",
@@ -2506,7 +2615,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Adăugați un cronometru din acțiunile rapide. Pornire și Pauză acționează imediat; Oprește salvează durata, data și Notițele într-un comentariu ștergibil.",
     "tipsScheduleGuide": "Programați Pornire, Pauză sau Oprire cu Minute, Secunde ori Dată și oră, apoi Salvează. Anulați individual acțiunile deasupra Notițelor.",
     "tipsBulkGuide": "Acțiunile în masă mută sarcini, schimbă categorii sau stare, șterg ori creează și selectează un proiect nou.",
-    "tipsIndicatorsGuide": "Rândurile arată prioritate, progres, etichete, culoare, recurență și comentarii. Captura depinde de browser și dispozitiv."
+    "tipsIndicatorsGuide": "Rândurile arată prioritate, progres, etichete, culoare, recurență și comentarii. Captura depinde de browser și dispozitiv.",
+    "assignees": "Responsabili",
+    "assignTo": "Atribuie lui",
+    "assignToMe": "Atribuie-mi",
+    "searchAssignees": "Caută responsabili",
+    "unassign": "Elimină atribuirea"
   },
   "ru": {
     "labels": "Метки",
@@ -2532,6 +2646,7 @@ export const TRANSLATIONS = {
     "addTask": "Добавить задачу",
     "selectAll": "Выбрать все",
     "selected": "выбрано",
+    "myTasks": "Мои задачи",
     "filterTasks": "Фильтр задач",
     "project": "Проект",
     "categories": "Категории",
@@ -2638,7 +2753,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Добавьте таймер через быстрые действия. Старт и Пауза срабатывают сразу; Остановить записывает время, дату и Заметки в удаляемый комментарий.",
     "tipsScheduleGuide": "Запланируйте Старт, Паузу или Остановку через Минуты, Секунды либо Дату и время, затем Сохранить. Отменяйте действия по отдельности над Заметками.",
     "tipsBulkGuide": "Массовые действия перемещают задачи, меняют категории или статус, удаляют либо создают и выбирают новый проект.",
-    "tipsIndicatorsGuide": "Строки показывают приоритет, прогресс, метки, цвет, повторение и число комментариев. Захват вложений зависит от браузера и устройства."
+    "tipsIndicatorsGuide": "Строки показывают приоритет, прогресс, метки, цвет, повторение и число комментариев. Захват вложений зависит от браузера и устройства.",
+    "assignees": "Ответственные",
+    "assignTo": "Назначить",
+    "assignToMe": "Назначить мне",
+    "searchAssignees": "Поиск ответственных",
+    "unassign": "Снять назначение"
   },
   "sr": {
     "labels": "Ознаке",
@@ -2664,6 +2784,7 @@ export const TRANSLATIONS = {
     "addTask": "Додај задатак",
     "selectAll": "Изабери све",
     "selected": "изабрано",
+    "myTasks": "Моји задаци",
     "filterTasks": "Филтрирај наслове задатака",
     "project": "Пројекат",
     "categories": "Категорије",
@@ -2770,7 +2891,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Додајте тајмер из брзих радњи. Старт и Пауза делују одмах; Заустави бележи време, датум и Белешке у коментар који се може обрисати.",
     "tipsScheduleGuide": "Закажите Старт, Паузу или Заустављање преко Минута, Секунди или Датума и времена, па Сачувај. Откажите радње појединачно изнад Белешки.",
     "tipsBulkGuide": "Групне радње премештају задатке, мењају категорије или стање, бришу или праве и бирају нови пројекат.",
-    "tipsIndicatorsGuide": "Редови показују приоритет, напредак, ознаке, боју, понављање и број коментара. Снимање прилога зависи од прегледача и уређаја."
+    "tipsIndicatorsGuide": "Редови показују приоритет, напредак, ознаке, боју, понављање и број коментара. Снимање прилога зависи од прегледача и уређаја.",
+    "assignees": "Одговорни",
+    "assignTo": "Додели",
+    "assignToMe": "Додели мени",
+    "searchAssignees": "Претражи одговорне",
+    "unassign": "Уклони доделу"
   },
   "th": {
     "labels": "ป้ายกำกับ",
@@ -2796,6 +2922,7 @@ export const TRANSLATIONS = {
     "addTask": "เพิ่มงาน",
     "selectAll": "เลือกทั้งหมด",
     "selected": "เลือกแล้ว",
+    "myTasks": "งานของฉัน",
     "filterTasks": "กรองชื่องาน",
     "project": "โครงการ",
     "categories": "หมวดหมู่",
@@ -2902,7 +3029,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "เพิ่มตัวจับเวลาจากคำสั่งด่วน เริ่มและหยุดชั่วคราวทำงานทันที ส่วนหยุดจะบันทึกเวลา วันที่ และบันทึกลงในความคิดเห็นที่ลบได้",
     "tipsScheduleGuide": "กำหนดเริ่ม หยุดชั่วคราว หรือหยุดด้วยนาที วินาที หรือวันที่และเวลา แล้วบันทึก ยกเลิกแต่ละคำสั่งเหนือบันทึกได้",
     "tipsBulkGuide": "คำสั่งแบบกลุ่มใช้ย้ายงาน เปลี่ยนหมวดหมู่หรือสถานะ ลบ หรือสร้างและเลือกโครงการใหม่",
-    "tipsIndicatorsGuide": "แถวงานแสดงลำดับความสำคัญ ความคืบหน้า ป้ายกำกับ สี การทำซ้ำ และจำนวนความคิดเห็น การจับไฟล์แนบขึ้นกับเบราว์เซอร์และอุปกรณ์"
+    "tipsIndicatorsGuide": "แถวงานแสดงลำดับความสำคัญ ความคืบหน้า ป้ายกำกับ สี การทำซ้ำ และจำนวนความคิดเห็น การจับไฟล์แนบขึ้นกับเบราว์เซอร์และอุปกรณ์",
+    "assignees": "ผู้รับผิดชอบ",
+    "assignTo": "มอบหมายให้",
+    "assignToMe": "มอบหมายให้ฉัน",
+    "searchAssignees": "ค้นหาผู้รับผิดชอบ",
+    "unassign": "ยกเลิกการมอบหมาย"
   },
   "tr": {
     "labels": "Etiketler",
@@ -2928,6 +3060,7 @@ export const TRANSLATIONS = {
     "addTask": "Görev ekle",
     "selectAll": "Tümünü seç",
     "selected": "seçildi",
+    "myTasks": "Görevlerim",
     "filterTasks": "Görev başlıklarını filtrele",
     "project": "Proje",
     "categories": "Kategoriler",
@@ -3034,7 +3167,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Hızlı işlemlerden zamanlayıcı ekleyin. Başlat ve Duraklat hemen çalışır; Durdur süreyi, tarihi ve Notları silinebilir yoruma yazar.",
     "tipsScheduleGuide": "Dakika, Saniye veya Tarih ve saat ile Başlat, Duraklat ya da Durdur planlayıp Kaydet seçin. İşlemleri Notların üstünden tek tek iptal edin.",
     "tipsBulkGuide": "Toplu işlemler görevleri taşır, kategori veya durumu değiştirir, siler ya da yeni proje oluşturup seçer.",
-    "tipsIndicatorsGuide": "Satırlar öncelik, ilerleme, etiket, renk, tekrar ve yorum sayısını gösterir. Ek yakalama tarayıcıya ve cihaza bağlıdır."
+    "tipsIndicatorsGuide": "Satırlar öncelik, ilerleme, etiket, renk, tekrar ve yorum sayısını gösterir. Ek yakalama tarayıcıya ve cihaza bağlıdır.",
+    "assignees": "Sorumlular",
+    "assignTo": "Şuna ata",
+    "assignToMe": "Bana ata",
+    "searchAssignees": "Sorumlu ara",
+    "unassign": "Atamayı kaldır"
   },
   "uk": {
     "labels": "Мітки",
@@ -3060,6 +3198,7 @@ export const TRANSLATIONS = {
     "addTask": "Додати завдання",
     "selectAll": "Вибрати все",
     "selected": "вибрано",
+    "myTasks": "Мої завдання",
     "filterTasks": "Фільтрувати назви завдань",
     "project": "Проєкт",
     "categories": "Категорії",
@@ -3166,7 +3305,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Додайте таймер через швидкі дії. Старт і Пауза діють одразу; Зупинити записує час, дату й Нотатки у видалюваний коментар.",
     "tipsScheduleGuide": "Заплануйте Старт, Паузу або Зупинку через Хвилини, Секунди чи Дату й час, потім Зберегти. Скасовуйте дії окремо над Нотатками.",
     "tipsBulkGuide": "Масові дії переміщують завдання, змінюють категорії або стан, видаляють чи створюють і вибирають новий проєкт.",
-    "tipsIndicatorsGuide": "Рядки показують пріоритет, прогрес, мітки, колір, повторення й кількість коментарів. Захоплення вкладень залежить від браузера та пристрою."
+    "tipsIndicatorsGuide": "Рядки показують пріоритет, прогрес, мітки, колір, повторення й кількість коментарів. Захоплення вкладень залежить від браузера та пристрою.",
+    "assignees": "Відповідальні",
+    "assignTo": "Призначити",
+    "assignToMe": "Призначити мені",
+    "searchAssignees": "Пошук відповідальних",
+    "unassign": "Зняти призначення"
   },
   "ur": {
     "labels": "لیبلز",
@@ -3192,6 +3336,7 @@ export const TRANSLATIONS = {
     "addTask": "کام شامل کریں",
     "selectAll": "سب منتخب کریں",
     "selected": "منتخب",
+    "myTasks": "میرے کام",
     "filterTasks": "کام کے عنوانات فلٹر کریں",
     "project": "پروجیکٹ",
     "categories": "زمرے",
@@ -3298,7 +3443,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "فوری کارروائیوں سے ٹائمر شامل کریں۔ شروع اور وقفہ فوراً کام کرتے ہیں؛ روکیں وقت، تاریخ اور نوٹس کو حذف ہونے والے تبصرے میں لکھتا ہے۔",
     "tipsScheduleGuide": "منٹ، سیکنڈ یا تاریخ اور وقت سے شروع، وقفہ یا روکیں مقرر کرکے محفوظ کریں۔ نوٹس کے اوپر ہر محفوظ عمل الگ منسوخ کریں۔",
     "tipsBulkGuide": "اجتماعی کارروائیاں کام منتقل، زمرہ یا حالت تبدیل، حذف، یا نیا پروجیکٹ بنا کر منتخب کرتی ہیں۔",
-    "tipsIndicatorsGuide": "کام کی قطار ترجیح، پیش رفت، لیبل، رنگ، تکرار اور تبصروں کی تعداد دکھاتی ہے۔ منسلکہ کیپچر براؤزر اور آلے پر منحصر ہے۔"
+    "tipsIndicatorsGuide": "کام کی قطار ترجیح، پیش رفت، لیبل، رنگ، تکرار اور تبصروں کی تعداد دکھاتی ہے۔ منسلکہ کیپچر براؤزر اور آلے پر منحصر ہے۔",
+    "assignees": "ذمہ دار افراد",
+    "assignTo": "تفویض کریں",
+    "assignToMe": "مجھے تفویض کریں",
+    "searchAssignees": "ذمہ دار تلاش کریں",
+    "unassign": "تفویض ختم کریں"
   },
   "vi": {
     "labels": "Nhãn",
@@ -3324,6 +3474,7 @@ export const TRANSLATIONS = {
     "addTask": "Thêm công việc",
     "selectAll": "Chọn tất cả",
     "selected": "đã chọn",
+    "myTasks": "Công việc của tôi",
     "filterTasks": "Lọc tiêu đề công việc",
     "project": "Dự án",
     "categories": "Danh mục",
@@ -3430,7 +3581,12 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "Thêm bộ hẹn giờ từ thao tác nhanh. Bắt đầu và Tạm dừng có hiệu lực ngay; Dừng ghi thời gian, ngày và Ghi chú vào bình luận có thể xóa.",
     "tipsScheduleGuide": "Lên lịch Bắt đầu, Tạm dừng hoặc Dừng bằng Phút, Giây hoặc Ngày và giờ rồi Lưu. Hủy từng thao tác phía trên Ghi chú.",
     "tipsBulkGuide": "Thao tác hàng loạt có thể di chuyển, đổi danh mục hoặc trạng thái, xóa, hoặc tạo và chọn dự án mới.",
-    "tipsIndicatorsGuide": "Dòng nhiệm vụ hiển thị ưu tiên, tiến độ, nhãn, màu, lặp lại và số bình luận. Chụp tệp phụ thuộc trình duyệt và thiết bị."
+    "tipsIndicatorsGuide": "Dòng nhiệm vụ hiển thị ưu tiên, tiến độ, nhãn, màu, lặp lại và số bình luận. Chụp tệp phụ thuộc trình duyệt và thiết bị.",
+    "assignees": "Người phụ trách",
+    "assignTo": "Giao cho",
+    "assignToMe": "Giao cho tôi",
+    "searchAssignees": "Tìm người phụ trách",
+    "unassign": "Bỏ giao việc"
   },
   "zh": {
     "labels": "标签",
@@ -3456,6 +3612,7 @@ export const TRANSLATIONS = {
     "addTask": "添加任务",
     "selectAll": "全选",
     "selected": "已选择",
+    "myTasks": "我的任务",
     "filterTasks": "筛选任务标题",
     "project": "项目",
     "categories": "分类",
@@ -3562,6 +3719,11 @@ export const TRANSLATIONS = {
     "tipsTimerGuide": "从快捷操作添加计时器。开始和暂停立即生效；停止会把时长、日期和备注写入可删除的评论。",
     "tipsScheduleGuide": "选择开始、暂停或停止，再选择分钟、秒或日期和时间，输入值并保存。可在备注上方逐项取消已保存操作。",
     "tipsBulkGuide": "批量操作可移动任务、更改分类或状态、删除任务，或创建并选择新项目。",
-    "tipsIndicatorsGuide": "任务行会显示优先级、进度、标签、颜色、重复和评论数。附件拍摄取决于浏览器和设备。"
+    "tipsIndicatorsGuide": "任务行会显示优先级、进度、标签、颜色、重复和评论数。附件拍摄取决于浏览器和设备。",
+    "assignees": "负责人",
+    "assignTo": "分配给",
+    "assignToMe": "分配给我",
+    "searchAssignees": "搜索负责人",
+    "unassign": "取消分配"
   }
 };

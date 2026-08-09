@@ -22,7 +22,7 @@
   <body>
     <main><header><h1></h1><p></p></header><div class="grid"></div></main>
     <script type="module">
-      import { TRANSLATIONS } from "./vikunja-todo-card-translations.js?v=0.32.1";
+      import { TRANSLATIONS } from "./vikunja-todo-card-translations.js?v=0.35.1";
       const params=new URLSearchParams(location.search); let locale=params.get("lang")||navigator.language.split("-")[0]; if(!TRANSLATIONS[locale])locale="en";
       const chip=value=>`<span class="chip">${value}</span>`; const flow=values=>`<div class="flow">${values.map((value,index)=>`${index?'<span class="arrow">→</span>':''}${chip(value)}`).join("")}</div>`;
       function render(){const t=key=>TRANSLATIONS[locale][key]||TRANSLATIONS.en[key]||key;document.documentElement.lang=locale;document.documentElement.dir=["ar","fa","ur"].includes(locale)?"rtl":"ltr";document.title=t("tips");document.querySelector("h1").textContent=t("tips");document.querySelector("header p").textContent=t("tipsIntro");document.querySelector(".grid").innerHTML=`

@@ -6,6 +6,10 @@ Vikunja Task Hub is designed to keep task data within Home Assistant, the config
 
 The integration processes the Vikunja connection URL and API token, project and label metadata, task content and status, due dates, recurrence, priority, progress, color, comment counts, comments and their displayed author names, task attachments, and per-task elapsed-time state and optional notes. It also checks whether the current Home Assistant websocket user is an administrator for project/label management.
 
+Successful dashboard changes emit a local `vikunja_task_hub_action` event for Home Assistant automations. Event data is deliberately allowlisted and excludes descriptions, comment bodies, timer notes, filenames, attachment contents, tokens, and server URLs. Task titles are included only for actions where the task is already loaded. Users control whether an automation forwards any event data to an external notification service.
+
+The integration creates a fixed set of automation event targets per configured Vikunja connection. It does not create entities for projects or tasks. Automation actions require explicit connection/task/project/category identifiers and use the same configured local Vikunja connection; they do not introduce another network destination.
+
 ## Storage
 
 - The connection URL, API token, and TLS preference are stored in the Home Assistant config entry.

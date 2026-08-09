@@ -12,6 +12,13 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
 
+from .assignees import (
+    get_current_user,
+    get_project_users,
+    set_task_assignees,
+    task_assignees,
+)
+from .automation import event_data, fire_events
 from .attachments import (
     attachment_metadata,
     delete_attachment,
@@ -58,6 +65,30 @@ async def _projects_and_tasks(api) -> tuple[list, list]:
     projects = await api.get_projects()
     task_groups = await asyncio.gather(*(api.get_tasks(project.id) for project in projects))
     return projects, [task for group in task_groups for task in group]
+
+
+async def _project_dashboard_data(api, project_id: int) -> tuple[list, list]:
+    """Return assignment choices and tasks for one authorized project."""
+    users, tasks = await asyncio.gather(
+        get_project_users(api, project_id),
+        get_project_tasks_with_comment_counts(api, project_id),
+        return_exceptions=True,
+    )
+    if isinstance(tasks, BaseException):
+        raise tasks
+    if isinstance(users, BaseException):
+        LOGGER.warning("Unable to load eligible assignees for project %s", project_id)
+        users = []
+    return users, tasks
+
+
+async def _current_user(api) -> dict[str, Any] | None:
+    """Return the authenticated user without making dashboard loading depend on it."""
+    try:
+        return await get_current_user(api)
+    except Exception:
+        LOGGER.warning("Unable to identify the authenticated Vikunja user")
+        return None
 
 
 def _inbox_project(projects: list, excluded_project_id: int | None = None):
@@ -110,10 +141,15 @@ async def _payload(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     project_models = await api.get_projects()
     results = await asyncio.gather(
         api.get_labels(),
-        *(get_project_tasks_with_comment_counts(api, project.id) for project in project_models),
+        _current_user(api),
+        *(_project_dashboard_data(api, project.id) for project in project_models),
     )
     labels = results[0]
-    dashboard_tasks = [task for project_tasks in results[1:] for task in project_tasks]
+    current_user = results[1]
+    if current_user is not None:
+        data["current_user_id"] = current_user["id"]
+    project_results = results[2:]
+    dashboard_tasks = [task for _, project_tasks in project_results for task in project_tasks]
     projects = [{"id": project.id, "title": project.title} for project in project_models]
     tasks = [
         {
@@ -130,6 +166,7 @@ async def _payload(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
             "percent_done": float(task.data.get("percent_done") or 0),
             "hex_color": _hex_color(task.data.get("hex_color")),
             "comment_count": int(task.data.get("comment_count") or 0),
+            "assignees": task_assignees(task),
             "labels": [label.id for label in task.labels],
             "attachments": attachment_metadata(task),
         }
@@ -137,6 +174,11 @@ async def _payload(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     ]
     return {
         "projects": sorted(projects, key=lambda item: item["title"].casefold()),
+        "current_user": current_user,
+        "project_users": {
+            str(project.id): users
+            for project, (users, _) in zip(project_models, project_results, strict=True)
+        },
         "labels": sorted(
             [
                 {
@@ -273,6 +315,7 @@ ACTION_SCHEMA = {
     vol.Optional("percent_done"): vol.All(vol.Coerce(float), vol.Range(min=0, max=1)),
     vol.Optional("hex_color"): vol.Match(r"^(?:|[0-9A-Fa-f]{6})$"),
     vol.Optional("label_ids"): [vol.Coerce(int)],
+    vol.Optional("assignee_ids"): [vol.Coerce(int)],
     vol.Optional("delete_tasks", default=False): bool,
     vol.Optional("label_operation"): vol.In({"add", "remove"}),
     vol.Optional("attachment_id"): vol.Coerce(int),
@@ -306,6 +349,8 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
         action = msg["action"]
         created_project_id = None
         time_tracking_changed = False
+        automation_events = []
+        event_details = {}
 
         if action in {"project_create", "project_delete", "label_create", "label_delete"}:
             if not connection.user.is_admin:
@@ -322,8 +367,20 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                 await add_task_label(api, task.id, label_id)
             if msg.get("label_ids"):
                 await api.get_task(task.id)
+            automation_events.append(
+                event_data(
+                    data["entry_id"],
+                    action,
+                    msg,
+                    task_id=task.id,
+                    task_title=task.title,
+                )
+            )
         elif action == "task_update":
             task = await api.get_task(msg["task_id"])
+            previous_assignee_ids = {user["id"] for user in task_assignees(task)}
+            previous_done = bool(task.done)
+            previous_project_id = int(task.project_id)
             update = {}
             for field in (
                 "title",
@@ -347,13 +404,58 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                     await add_task_label(api, task.id, label_id)
                 for label_id in current_labels - desired_labels:
                     await remove_task_label(api, task.id, label_id)
+            if "assignee_ids" in msg:
+                await set_task_assignees(api, task.id, msg["assignee_ids"])
+            desired_assignee_ids = set(msg.get("assignee_ids", previous_assignee_ids))
+            automation_events.append(
+                event_data(
+                    data["entry_id"],
+                    action,
+                    msg,
+                    task_title=task.title,
+                    previous_project_id=previous_project_id,
+                    previous_done=previous_done,
+                    done_changed="done" in msg and bool(msg["done"]) != previous_done,
+                    added_assignee_ids=sorted(desired_assignee_ids - previous_assignee_ids),
+                    removed_assignee_ids=sorted(previous_assignee_ids - desired_assignee_ids),
+                    changed_fields=sorted(
+                        field
+                        for field in (
+                            "title",
+                            "description",
+                            "done",
+                            "due",
+                            "repeat_after",
+                            "repeat_mode",
+                            "priority",
+                            "percent_done",
+                            "hex_color",
+                            "label_ids",
+                            "assignee_ids",
+                        )
+                        if field in msg
+                    ),
+                )
+            )
         elif action == "task_delete":
+            task = await api.get_task(msg["task_id"])
             await api.delete_task(msg["task_id"])
             await _time_tracker(hass).finish(data["entry_id"], msg["task_id"])
             time_tracking_changed = True
+            automation_events.append(
+                event_data(
+                    data["entry_id"],
+                    action,
+                    msg,
+                    task_title=task.title,
+                    project_id=task.project_id,
+                )
+            )
         elif action == "task_bulk_update":
             for task_id in msg.get("task_ids", []):
                 task = await api.get_task(task_id)
+                previous_project_id = int(task.project_id)
+                previous_done = bool(task.done)
                 update = {}
                 if "project_id" in msg:
                     update["project_id"] = msg["project_id"]
@@ -371,10 +473,35 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                             await add_task_label(api, task.id, label_id)
                         elif msg["label_operation"] == "remove" and label_id in current_labels:
                             await remove_task_label(api, task.id, label_id)
+                automation_events.append(
+                    event_data(
+                        data["entry_id"],
+                        action,
+                        msg,
+                        task_id=task.id,
+                        task_title=task.title,
+                        previous_project_id=previous_project_id,
+                        previous_done=previous_done,
+                        done_changed=(
+                            "done" in msg and bool(msg["done"]) != previous_done
+                        ),
+                    )
+                )
         elif action == "task_bulk_delete":
             for task_id in msg.get("task_ids", []):
+                task = await api.get_task(task_id)
                 await api.delete_task(task_id)
                 await _time_tracker(hass).finish(data["entry_id"], task_id)
+                automation_events.append(
+                    event_data(
+                        data["entry_id"],
+                        action,
+                        msg,
+                        task_id=task.id,
+                        task_title=task.title,
+                        project_id=task.project_id,
+                    )
+                )
             time_tracking_changed = bool(msg.get("task_ids"))
         elif action == "project_create":
             tasks_to_move = []
@@ -387,6 +514,10 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                 if isinstance(created_project, dict)
                 else created_project.id
             )
+            event_details = {
+                "created_project_id": created_project_id,
+                "project_title": msg["title"].strip(),
+            }
             moved_tasks = []
             try:
                 for task, original_project_id in tasks_to_move:
@@ -421,8 +552,13 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                 for task in affected_tasks:
                     await task.update({"project_id": inbox.id})
             await api.delete_project(msg["project_id"])
+            event_details = {
+                "project_title": selected_project.title,
+                "affected_task_count": len(affected_tasks),
+            }
         elif action == "label_create":
             await api.create_label({"title": msg["title"].strip()})
+            event_details = {"category_title": msg["title"].strip()}
         elif action == "label_delete":
             _, tasks = await _projects_and_tasks(api)
             affected_tasks = [
@@ -432,6 +568,7 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                 for task in affected_tasks:
                     await api.delete_task(task.id)
             await api.delete_label(msg["label_id"])
+            event_details = {"affected_task_count": len(affected_tasks)}
         elif action == "attachment_upload":
             await upload_attachments(api, msg["task_id"], msg.get("files", []))
         elif action == "attachment_delete":
@@ -539,6 +676,11 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
             )
             time_tracking_changed = True
 
+        if not automation_events:
+            automation_events.append(
+                event_data(data["entry_id"], action, msg, **event_details)
+            )
+        fire_events(hass, automation_events)
         result = await _payload(hass, data)
         if created_project_id is not None:
             result["created_project_id"] = created_project_id

@@ -6,7 +6,26 @@ The project uses semantic versioning. Dates use ISO 8601 format.
 
 ## [Unreleased]
 
-No changes yet.
+## [0.35.1] - 2026-08-09
+
+### Added
+
+- Add local Home Assistant automation events for successful task, assignment, project, category, comment, attachment, and timer changes, with privacy-conscious payloads and practical examples.
+- Document a step-by-step Home Assistant notification automation for tasks assigned to the current Vikunja user.
+- Add stable event targets per connection for friendly assignment, task, project, category, comment, attachment, and timer automation triggers.
+- Add Home Assistant automation actions for task creation, completion, reopening, self-assignment, movement, due dates, priority, and category membership.
+- Add a conditional **My Tasks (N)** toggle that filters the current project/category view to tasks assigned to the authenticated user.
+- Show assigned users discreetly before task titles, manage assignments from task details, and assign available project users from task quick actions.
+- Provide searchable assignee pickers, removable assignment chips, a compact **Assign to me** action, and direct unassignment by right-clicking or holding assigned names.
+
+### Changed
+
+- Refresh open dashboard cards after successful Home Assistant automation actions.
+
+### Privacy and safeguards
+
+- Keep automation payloads on Home Assistant's local event bus and exclude descriptions, comment bodies, timer notes, filenames, attachment contents, API tokens, and server URLs.
+- Keep automation targets fixed per connection instead of creating entities or devices for individual projects and tasks.
 
 ## [0.32.1] - 2026-07-22
 

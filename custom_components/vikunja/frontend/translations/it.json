@@ -22,6 +22,7 @@
   "addTask": "Aggiungi attività",
   "selectAll": "Seleziona tutto",
   "selected": "selezionate",
+  "myTasks": "Le mie attività",
   "filterTasks": "Filtra i titoli delle attività",
   "project": "Progetto",
   "categories": "Categorie",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Aggiungi un timer dalle azioni rapide. Avvia e Pausa agiscono subito; Ferma registra durata, data e Note in un commento eliminabile.",
   "tipsScheduleGuide": "Pianifica Avvia, Pausa o Ferma con Minuti, Secondi o Data e ora, poi Salva. Annulla singolarmente le azioni sopra Note.",
   "tipsBulkGuide": "Le azioni di massa spostano attività, cambiano categorie o stato, eliminano o creano e selezionano un nuovo progetto.",
-  "tipsIndicatorsGuide": "Le righe mostrano priorità, avanzamento, etichette, colore, ricorrenza e commenti. La cattura allegati dipende da browser e dispositivo."
+  "tipsIndicatorsGuide": "Le righe mostrano priorità, avanzamento, etichette, colore, ricorrenza e commenti. La cattura allegati dipende da browser e dispositivo.",
+  "assignees": "Assegnatari",
+  "assignTo": "Assegna a",
+  "assignToMe": "Assegna a me",
+  "searchAssignees": "Cerca assegnatari",
+  "unassign": "Rimuovi assegnazione"
 }

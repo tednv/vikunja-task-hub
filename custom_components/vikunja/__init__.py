@@ -4,12 +4,14 @@ from urllib.parse import urlparse
 
 import httpx
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.storage import Store
 from pyvikunja.api import APIError, VikunjaAPI
 
+from .assignees import get_current_user
 from .const import (
     CONF_BASE_URL,
     CONF_STRICT_SSL,
@@ -22,7 +24,10 @@ from .const import (
 )
 from .dashboard import async_complete_scheduled_timer, async_register_dashboard_commands
 from .frontend import async_register_frontend
+from .services import async_register_services
 from .time_tracking import TaskTimeTracker
+
+PLATFORMS = [Platform.EVENT]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -41,6 +46,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     await tracker.async_load()
     domain_data["time_tracker"] = tracker
     async_register_dashboard_commands(hass)
+    async_register_services(hass)
     await async_register_frontend(hass, VERSION)
     return True
 
@@ -62,6 +68,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (httpx.HTTPError, APIError) as err:
         raise ConfigEntryNotReady("Unable to connect to Vikunja") from err
 
+    try:
+        current_user = await get_current_user(vikunja_api)
+    except Exception:  # Eligible-user discovery must not block the connection.
+        current_user = None
+        LOGGER.warning("Unable to identify the current Vikunja user for automation events")
+
     host = urlparse(vikunja_api.web_ui_link).netloc
     entry_title = f"{INTEGRATION_NAME} ({host})" if host else INTEGRATION_NAME
     if entry.title != entry_title:
@@ -70,16 +82,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": vikunja_api,
         "entry_id": entry.entry_id,
+        "current_user_id": current_user["id"] if current_user else None,
     }
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     LOGGER.debug("Vikunja Task Hub connection is ready")
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a Vikunja connection."""
-    domain_data = hass.data.get(DOMAIN, {})
-    domain_data.pop(entry.entry_id, None)
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        domain_data = hass.data.get(DOMAIN, {})
+        domain_data.pop(entry.entry_id, None)
+    return unload_ok
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

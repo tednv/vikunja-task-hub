@@ -22,6 +22,7 @@
   "addTask": "Ajouter une tâche",
   "selectAll": "Tout sélectionner",
   "selected": "sélectionnées",
+  "myTasks": "Mes tâches",
   "filterTasks": "Filtrer les titres",
   "project": "Projet",
   "categories": "Catégories",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Ajoutez un minuteur depuis les actions rapides. Démarrer et Pause agissent immédiatement ; Arrêter enregistre durée, date et Notes dans un commentaire supprimable.",
   "tipsScheduleGuide": "Planifiez Démarrer, Pause ou Arrêter avec Minutes, Secondes ou Date et heure, puis Enregistrer. Annulez chaque action au-dessus des Notes.",
   "tipsBulkGuide": "Les actions groupées déplacent les tâches, changent catégories ou état, suppriment, ou créent et sélectionnent un projet.",
-  "tipsIndicatorsGuide": "Les lignes affichent priorité, progression, étiquettes, couleur, récurrence et nombre de commentaires. La capture dépend du navigateur et de l'appareil."
+  "tipsIndicatorsGuide": "Les lignes affichent priorité, progression, étiquettes, couleur, récurrence et nombre de commentaires. La capture dépend du navigateur et de l'appareil.",
+  "assignees": "Responsables",
+  "assignTo": "Attribuer à",
+  "assignToMe": "Me l’attribuer",
+  "searchAssignees": "Rechercher des responsables",
+  "unassign": "Retirer l’attribution"
 }

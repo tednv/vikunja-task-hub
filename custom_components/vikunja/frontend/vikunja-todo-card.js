@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./vikunja-todo-card-translations.js?v=0.32.1";
+import { TRANSLATIONS } from "./vikunja-todo-card-translations.js?v=0.35.1";
 
 const CARD_TYPE = "vikunja-todo-card";
 const STORAGE_PREFIX = "vikunja-todo-card:selected:";
@@ -25,14 +25,20 @@ class VikunjaTodoCard extends HTMLElement {
     this._openTimers = new Set();
     this._contextMenu = undefined;
     this._search = "";
+    this._myTasksOnly = false;
     this._dataReceivedAt = Date.now();
     this._timerTicker = undefined;
     this._unsubscribeTimeTracking = undefined;
+    this._unsubscribeActivity = undefined;
   }
 
   connectedCallback() {
     if (!this._timerTicker)
       this._timerTicker = setInterval(() => this._updateElapsedTimers(), 1000);
+    if (this._hass) {
+      void this._subscribeTimeTracking();
+      void this._subscribeActivity();
+    }
   }
 
   disconnectedCallback() {
@@ -40,6 +46,8 @@ class VikunjaTodoCard extends HTMLElement {
     this._timerTicker = undefined;
     this._unsubscribeTimeTracking?.();
     this._unsubscribeTimeTracking = undefined;
+    this._unsubscribeActivity?.();
+    this._unsubscribeActivity = undefined;
   }
 
   static getStubConfig() {
@@ -65,7 +73,10 @@ class VikunjaTodoCard extends HTMLElement {
     const firstConnection = !this._hass;
     const previousLanguage = this._language();
     this._hass = hass;
-    if (firstConnection) void this._subscribeTimeTracking();
+    if (firstConnection) {
+      void this._subscribeTimeTracking();
+      void this._subscribeActivity();
+    }
     if (firstConnection && !this._data && !this._loading) void this._load();
     else if (previousLanguage !== this._language()) this._render();
   }
@@ -216,11 +227,17 @@ class VikunjaTodoCard extends HTMLElement {
     );
   }
 
-  _filteredTasks(searchValue = this._search) {
+  _filteredTasks(searchValue = this._search, myTasksOnly = this._myTasksOnly) {
     let tasks = this._projectTasks();
     if (this._selectedLabel === "none") tasks = tasks.filter((task) => !task.labels.length);
     else if (this._selectedLabel !== "all")
       tasks = tasks.filter((task) => task.labels.map(String).includes(this._selectedLabel));
+    if (myTasksOnly) {
+      const currentUserId = Number(this._data?.current_user?.id);
+      tasks = tasks.filter((task) =>
+        (task.assignees ?? []).some((user) => Number(user.id) === currentUserId),
+      );
+    }
     const search = searchValue.trim().toLocaleLowerCase();
     return search ? tasks.filter((task) => task.title.toLocaleLowerCase().includes(search)) : tasks;
   }
@@ -277,6 +294,10 @@ class VikunjaTodoCard extends HTMLElement {
     const completed = displayed.filter((task) => task.done);
     const reserveColorSpace = displayed.some((task) => Boolean(task.hex_color));
     const visibleIds = this._filteredTasks().map((task) => Number(task.id));
+    const currentUserId = Number(data?.current_user?.id);
+    const myTaskCount = this._filteredTasks("", false).filter((task) =>
+      (task.assignees ?? []).some((user) => Number(user.id) === currentUserId),
+    ).length;
     const allVisibleSelected =
       visibleIds.length > 0 && visibleIds.every((taskId) => this._selectedTasks.has(taskId));
     const selectedTasks = (data?.tasks ?? []).filter((task) =>
@@ -320,6 +341,7 @@ class VikunjaTodoCard extends HTMLElement {
         .bulk-bar { padding:12px 14px; border-top:1px solid var(--divider-color); background:var(--secondary-background-color); }
         .selection-tools { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
         .select-all { display:inline-flex; gap:7px; align-items:center; font-weight:600; }
+        .my-tasks-toggle.active { background:var(--primary-color); color:var(--text-primary-color,#fff); }
         .clear-selection { padding:5px 8px; }
         .task-filter { flex:1 1 240px; max-width:420px; box-sizing:border-box; }
         .bulk-actions { display:grid; grid-template-columns:minmax(180px,1fr) minmax(240px,1.35fr) minmax(260px,1.4fr); gap:12px; margin-top:12px; }
@@ -350,6 +372,8 @@ class VikunjaTodoCard extends HTMLElement {
         .task-color { width:14px; height:14px; margin-top:3px; border-radius:50%; align-self:start; }
         .task-color-spacer { width:14px; height:14px; }
         .priority-marker { margin-right:6px; }
+        .assignee-list { margin-right:5px; color:var(--secondary-text-color); font-weight:400; }
+        .assignee-names { font-style:italic; }
         .task-labels { display:flex; gap:5px; overflow:hidden; margin-top:4px; }
         .task-label { flex:0 1 auto; min-width:0; max-width:150px; padding:2px 6px; border-radius:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; background:var(--secondary-background-color); font-size:11px; }
         .progress-wrap { align-self:center; min-width:0; }
@@ -384,6 +408,18 @@ class VikunjaTodoCard extends HTMLElement {
         .comment-text { margin-top:2px; color:var(--primary-text-color); white-space:pre-wrap; }
         .context-menu { position:fixed; z-index:30; display:grid; min-width:180px; max-width:calc(100vw - 16px); max-height:calc(100vh - 16px); overflow-y:auto; padding:6px; border:1px solid var(--divider-color); border-radius:10px; background:var(--card-background-color); box-shadow:var(--ha-card-box-shadow); }
         .context-menu button { text-align:left; background:transparent; }
+        .context-assignees > summary { cursor:pointer; list-style:none; padding:9px 11px; }
+        .context-assignees > summary::-webkit-details-marker { display:none; }
+        .context-assignee-options { display:grid; padding-left:12px; border-left:2px solid var(--divider-color); }
+        .context-assignee-search { box-sizing:border-box; width:100%; margin:4px 0; }
+        .assignee-picker { display:grid; gap:8px; }
+        .assignee-values { display:none; }
+        .assignee-chips { display:flex; gap:6px; flex-wrap:wrap; }
+        .assignee-chip { display:inline-flex; gap:5px; align-items:center; padding:5px 8px; border-radius:14px; background:var(--secondary-background-color); }
+        .assignee-chip button { padding:0 3px; background:transparent; }
+        .assignee-options { display:grid; gap:4px; max-height:180px; overflow:auto; }
+        .assignee-option { text-align:left; }
+        .assignee-chip[hidden],.assignee-option[hidden] { display:none; }
         .context-color { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:9px 11px; cursor:pointer; }
         .context-color input { width:42px; min-width:42px; height:28px; padding:2px; cursor:pointer; }
         .empty,.status { padding:18px 14px; color:var(--secondary-text-color); }
@@ -451,6 +487,7 @@ class VikunjaTodoCard extends HTMLElement {
         <div class="bulk-bar">
           <div class="selection-tools">
             <label class="select-all"><input class="select-visible" type="checkbox" ${allVisibleSelected ? "checked" : ""} ${visibleIds.length ? "" : "disabled"}> ${this._t("selectAll")}${this._selectedTasks.size ? ` (${this._selectedTasks.size} ${this._t("selected")})` : ""}</label>
+            ${myTaskCount ? `<button type="button" class="my-tasks-toggle ${this._myTasksOnly ? "active" : ""}" aria-pressed="${this._myTasksOnly}" title="${this._t("myTasks")}">${this._t("myTasks")} (${myTaskCount})</button>` : ""}
             ${this._selectedTasks.size ? `<button type="button" class="clear-selection">${this._t("cancel")}</button>` : ""}
             <input class="task-filter" type="search" aria-label="${this._t("filterTasks")}" placeholder="${this._t("filterTasks")}" value="${this._escape(this._search)}">
           </div>
@@ -501,7 +538,7 @@ class VikunjaTodoCard extends HTMLElement {
         }
         <div class="card-links">
           ${this._vikunjaUrl ? `<a class="card-link" href="${this._escape(this._projectVikunjaUrl())}" target="_blank" rel="noopener noreferrer">${this._t("openVikunja")}</a>` : ""}
-          <a class="card-link" href="/vikunja-static/tips.html?lang=${encodeURIComponent(this._language())}&v=0.32.1" target="_blank" rel="noopener noreferrer">${this._t("tips")}</a>
+          <a class="card-link" href="/vikunja-static/tips.html?lang=${encodeURIComponent(this._language())}&v=0.35.1" target="_blank" rel="noopener noreferrer">${this._t("tips")}</a>
           <a class="card-link" href="https://github.com/tednv/vikunja-task-hub" target="_blank" rel="noopener noreferrer">${this._t("aboutRepository")}</a>
           <a class="card-link" href="https://buymeacoffee.com/tednv" target="_blank" rel="noopener noreferrer">${this._t("support")}</a>
         </div>
@@ -521,13 +558,14 @@ class VikunjaTodoCard extends HTMLElement {
     const progress = Math.max(0, Math.min(100, Math.round(Number(task.percent_done) * 100)));
     const comments = this._comments.get(Number(task.id));
     const timer = this._data?.time_tracking?.[String(task.id)];
+    const assigneeNames = (task.assignees ?? []).map((user) => this._userName(user)).filter(Boolean);
     const scheduledActions = timer?.scheduled_actions ?? [];
     const elapsed = Number(timer?.elapsed ?? 0) + (timer?.state === "active" ? Math.max(0, Math.floor((Date.now() - this._dataReceivedAt) / 1000)) : 0);
     return `<div class="task-shell ${reserveColorSpace ? "reserve-color" : ""}">
     <div class="row ${task.done ? "done" : ""}" data-task="${task.id}" data-search-title="${this._escape(task.title.toLocaleLowerCase())}">
       ${task.hex_color ? `<span class="task-color" style="background:#${this._escape(task.hex_color)}" title="${this._t("color")}"></span>` : reserveColorSpace ? `<span class="task-color-spacer" aria-hidden="true"></span>` : ""}
       <input type="checkbox" aria-label="${this._t("selectTask")}" ${this._selectedTasks.has(Number(task.id)) ? "checked" : ""}>
-      <button type="button" class="body" aria-label="${this._t("editTask")}"><div class="summary">${recurring ? `<span class="recurring-icon" title="${this._t("recurringTask")}" aria-label="${this._t("recurringTask")}">↻</span>` : ""}${priority ? `<span class="priority-marker" title="${this._t("priority")}: ${priority}">${"!".repeat(priority)}</span>` : ""}${this._escape(task.title)}</div>${labels.length ? `<div class="task-labels">${labels.map((label) => `<span class="task-label" style="${label.color ? `border-left:3px solid #${this._escape(label.color)}` : ""}">${this._escape(label.title)}</span>`).join("")}</div>` : ""}${task.description ? `<div class="description">${this._escape(this._plainText(task.description))}</div>` : ""}</button>
+      <button type="button" class="body" aria-label="${this._t("editTask")}"><div class="summary">${recurring ? `<span class="recurring-icon" title="${this._t("recurringTask")}" aria-label="${this._t("recurringTask")}">↻</span>` : ""}${priority ? `<span class="priority-marker" title="${this._t("priority")}: ${priority}">${"!".repeat(priority)}</span>` : ""}${assigneeNames.length ? `<span class="assignee-list"><em class="assignee-names">(${this._escape(assigneeNames.join(", "))})</em></span>` : ""}${this._escape(task.title)}</div>${labels.length ? `<div class="task-labels">${labels.map((label) => `<span class="task-label" style="${label.color ? `border-left:3px solid #${this._escape(label.color)}` : ""}">${this._escape(label.title)}</span>`).join("")}</div>` : ""}${task.description ? `<div class="description">${this._escape(this._plainText(task.description))}</div>` : ""}</button>
       ${progress > 0 ? `<div class="progress-wrap" title="${this._t("progress")}: ${progress}%"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><div class="progress-text">${progress}%</div></div>` : "<span></span>"}
     </div>
     ${timer ? `<button type="button" class="timer-toggle" aria-expanded="${this._openTimers.has(Number(task.id))}">${this._openTimers.has(Number(task.id)) ? "▾" : "▸"} ${this._t("timer")} (<span class="timer-state-icon">${timer.state === "active" ? "⏱" : "⏸"}</span> <span class="timer-elapsed" data-base="${Number(timer.elapsed ?? 0)}" data-snapshot="${this._dataReceivedAt}" data-active="${timer.state === "active"}">${this._formatElapsed(elapsed)}</span>)</button>` : ""}
@@ -559,11 +597,25 @@ class VikunjaTodoCard extends HTMLElement {
     );
     if (!task) return "";
     const timer = this._data?.time_tracking?.[String(task.id)];
+    const assignedIds = new Set((task.assignees ?? []).map((user) => Number(user.id)));
+    const availableAssignees = this._eligibleAssignees(task).filter(
+      (user) => !assignedIds.has(Number(user.id)),
+    );
+    if (this._contextMenu.mode === "unassign") {
+      return `<div class="context-menu" style="left:${this._contextMenu.x}px;top:${this._contextMenu.y}px" data-task="${task.id}">
+        ${(task.assignees ?? []).map((user) => `<button type="button" data-unassign-id="${user.id}">${this._t("unassign")} ${this._escape(this._userName(user))}</button>`).join("")}
+      </div>`;
+    }
+    const currentUserId = Number(this._data?.current_user?.id);
+    const currentUser = availableAssignees.find((user) => Number(user.id) === currentUserId);
+    const otherAssignees = availableAssignees.filter((user) => Number(user.id) !== currentUserId);
     return `<div class="context-menu" style="left:${this._contextMenu.x}px;top:${this._contextMenu.y}px" data-task="${task.id}">
       <button type="button" data-context="complete">${task.done ? this._t("markActive") : this._t("markComplete")}</button>
       ${timer ? "" : `<button type="button" data-context="time-add">${this._t("addTimer")}</button>`}
       ${Number(task.priority) < 5 ? `<button type="button" data-context="priority-up">${this._t("priority")} +</button>` : ""}
       ${Number(task.priority) > 0 ? `<button type="button" data-context="priority-down">${this._t("priority")} −</button><button type="button" data-context="priority-clear">${this._t("priority")} 0</button>` : ""}
+      ${currentUser ? `<button type="button" data-assignee-id="${currentUser.id}">${this._t("assignToMe")}</button>` : ""}
+      ${otherAssignees.length ? `<details class="context-assignees"><summary>${this._t("assignTo")} ›</summary><div class="context-assignee-options"><input type="search" class="context-assignee-search" aria-label="${this._t("searchAssignees")}" placeholder="${this._t("searchAssignees")}">${otherAssignees.map((user) => `<button type="button" data-assignee-id="${user.id}" data-user-search="${this._escape(this._userName(user).toLocaleLowerCase())}">${this._escape(this._userName(user))}</button>`).join("")}</div></details>` : ""}
       <label class="context-color">${this._t("color")}<input class="context-color-input" type="color" value="#${this._escape(task.hex_color || "1976d2")}"></label>
       <button type="button" data-context="copy">${this._t("copyAsText")}</button>
       <button type="button" data-context="share">${this._t("share")}</button>
@@ -597,6 +649,16 @@ class VikunjaTodoCard extends HTMLElement {
           `<label><input type="checkbox" name="labels" value="${label.id}" ${task.labels.map(String).includes(String(label.id)) ? "checked" : ""}> <span>${this._escape(label.title)}</span></label>`,
       )
       .join("");
+    const eligibleAssignees = this._eligibleAssignees(task);
+    const assignedIds = new Set((task.assignees ?? []).map((user) => String(user.id)));
+    const assigneePicker = eligibleAssignees.length
+      ? `<div class="assignee-picker">
+          <div class="assignee-values">${eligibleAssignees.map((user) => `<input type="checkbox" name="assignees" value="${user.id}" ${assignedIds.has(String(user.id)) ? "checked" : ""}>`).join("")}</div>
+          <div class="assignee-chips">${eligibleAssignees.map((user) => `<span class="assignee-chip" data-user-id="${user.id}" ${assignedIds.has(String(user.id)) ? "" : "hidden"}>${this._escape(this._userName(user))}<button type="button" data-remove-assignee="${user.id}" aria-label="${this._t("unassign")} ${this._escape(this._userName(user))}">×</button></span>`).join("")}</div>
+          <input type="search" class="assignee-search" aria-label="${this._t("searchAssignees")}" placeholder="${this._t("searchAssignees")}">
+          <div class="assignee-options">${eligibleAssignees.map((user) => `<button type="button" class="assignee-option" data-add-assignee="${user.id}" data-user-search="${this._escape(this._userName(user).toLocaleLowerCase())}" ${assignedIds.has(String(user.id)) ? "hidden" : ""}>${this._escape(this._userName(user))}</button>`).join("")}</div>
+        </div>`
+      : "";
     const attachments = (task.attachments ?? [])
       .map(
         (attachment) => `<div class="attachment-row" data-attachment="${attachment.id}">
@@ -656,6 +718,7 @@ class VikunjaTodoCard extends HTMLElement {
           </div>
         </div>
         <div class="field"><span>${this._t("labels")}</span><div class="category-options">${categoryOptions || `<span>${this._t("noCategories")}</span>`}</div></div>
+        ${assigneePicker ? `<div class="field"><span>${this._t("assignees")}</span>${assigneePicker}</div>` : ""}
         <section class="attachments">
           <h3>${this._t("attachments")} (${(task.attachments ?? []).length})</h3>
           <div class="attachment-list">${attachments || `<span class="attachment-meta">${this._t("noAttachments")}</span>`}</div>
@@ -724,6 +787,7 @@ class VikunjaTodoCard extends HTMLElement {
     root.querySelector('[data-role="project-select"]')?.addEventListener("change", (event) => {
       this._selectedProject = event.target.value;
       this._selectedLabel = "all";
+      this._myTasksOnly = false;
       this._selectedTasks.clear();
       this._bulkLabels.clear();
       this._rememberSelection();
@@ -731,6 +795,7 @@ class VikunjaTodoCard extends HTMLElement {
     });
     root.querySelector('[data-role="category-select"]')?.addEventListener("change", (event) => {
       this._selectedLabel = event.target.value;
+      this._myTasksOnly = false;
       this._selectedTasks.clear();
       this._bulkLabels.clear();
       this._render();
@@ -742,6 +807,12 @@ class VikunjaTodoCard extends HTMLElement {
       this._render();
     });
     root.querySelector(".clear-selection")?.addEventListener("click", () => {
+      this._selectedTasks.clear();
+      this._bulkLabels.clear();
+      this._render();
+    });
+    root.querySelector(".my-tasks-toggle")?.addEventListener("click", () => {
+      this._myTasksOnly = !this._myTasksOnly;
       this._selectedTasks.clear();
       this._bulkLabels.clear();
       this._render();
@@ -766,21 +837,30 @@ class VikunjaTodoCard extends HTMLElement {
       const row = shell.querySelector(".row");
       const taskId = Number(row.dataset.task);
       let longPressTimer;
+      let longPressOpened = false;
       const cancelLongPress = () => clearTimeout(longPressTimer);
-      const openMenu = (event) => {
+      const openMenu = (event, mode) => {
         event.preventDefault();
+        event.stopPropagation();
         this._contextMenu = {
           taskId,
           x: event.clientX,
           y: event.clientY,
+          ...(mode ? { mode } : {}),
         };
         this._render();
         this._positionContextMenu();
       };
-      row.addEventListener("contextmenu", openMenu);
+      row.addEventListener("contextmenu", (event) =>
+        openMenu(event, event.target.closest(".assignee-list") ? "unassign" : undefined),
+      );
       row.addEventListener("pointerdown", (event) => {
         if (event.button !== 0 || event.target.matches('input,button,.task-color')) return;
-        longPressTimer = setTimeout(() => openMenu(event), 550);
+        const mode = event.target.closest(".assignee-list") ? "unassign" : undefined;
+        longPressTimer = setTimeout(() => {
+          longPressOpened = true;
+          openMenu(event, mode);
+        }, 550);
       });
       row.addEventListener("pointerup", cancelLongPress);
       row.addEventListener("pointercancel", cancelLongPress);
@@ -888,6 +968,10 @@ class VikunjaTodoCard extends HTMLElement {
         input.value = "";
       });
       row.querySelector(".body")?.addEventListener("click", () => {
+        if (longPressOpened) {
+          longPressOpened = false;
+          return;
+        }
         this._editingTask = this._data?.tasks.find((task) => Number(task.id) === taskId);
         this._render();
         void this._loadComments(taskId);
@@ -929,6 +1013,47 @@ class VikunjaTodoCard extends HTMLElement {
         else this._render();
       });
     });
+    root.querySelectorAll(".context-menu [data-assignee-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const task = this._data?.tasks.find(
+          (item) => Number(item.id) === Number(this._contextMenu?.taskId),
+        );
+        const assigneeId = Number(button.dataset.assigneeId);
+        this._contextMenu = undefined;
+        if (!task || !Number.isFinite(assigneeId)) return this._render();
+        const assignee_ids = [
+          ...(task.assignees ?? []).map((user) => Number(user.id)),
+          assigneeId,
+        ];
+        void this._action("task_update", {
+          task_id: Number(task.id),
+          assignee_ids,
+        });
+      });
+    });
+    root.querySelectorAll(".context-menu [data-unassign-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const task = this._data?.tasks.find(
+          (item) => Number(item.id) === Number(this._contextMenu?.taskId),
+        );
+        const assigneeId = Number(button.dataset.unassignId);
+        this._contextMenu = undefined;
+        if (!task || !Number.isFinite(assigneeId)) return this._render();
+        const assignee_ids = (task.assignees ?? [])
+          .map((user) => Number(user.id))
+          .filter((userId) => userId !== assigneeId);
+        void this._action("task_update", {
+          task_id: Number(task.id),
+          assignee_ids,
+        });
+      });
+    });
+    root.querySelector(".context-assignee-search")?.addEventListener("input", (event) => {
+      const search = event.target.value.trim().toLocaleLowerCase();
+      root.querySelectorAll(".context-assignee-options [data-user-search]").forEach((button) => {
+        button.hidden = Boolean(search) && !button.dataset.userSearch.includes(search);
+      });
+    });
     root.querySelector(".context-color-input")?.addEventListener("change", (event) => {
       const task_id = Number(this._contextMenu?.taskId);
       const hex_color = String(event.target.value).replace(/^#/, "");
@@ -963,6 +1088,37 @@ class VikunjaTodoCard extends HTMLElement {
     colorInput?.addEventListener("input", () => {
       if (useColor) useColor.checked = true;
     });
+    const assigneeSearch = editor?.querySelector(".assignee-search");
+    const filterAssignees = () => {
+      const search = assigneeSearch?.value.trim().toLocaleLowerCase() ?? "";
+      editor?.querySelectorAll(".assignee-option").forEach((button) => {
+        const selected = editor.querySelector(
+          `.assignee-values [value="${button.dataset.addAssignee}"]`,
+        )?.checked;
+        button.hidden = Boolean(selected) || (Boolean(search) && !button.dataset.userSearch.includes(search));
+      });
+    };
+    editor?.querySelectorAll("[data-add-assignee]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const userId = button.dataset.addAssignee;
+        const value = editor.querySelector(`.assignee-values [value="${userId}"]`);
+        const chip = editor.querySelector(`.assignee-chip[data-user-id="${userId}"]`);
+        if (value) value.checked = true;
+        if (chip) chip.hidden = false;
+        filterAssignees();
+      });
+    });
+    editor?.querySelectorAll("[data-remove-assignee]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const userId = button.dataset.removeAssignee;
+        const value = editor.querySelector(`.assignee-values [value="${userId}"]`);
+        const chip = editor.querySelector(`.assignee-chip[data-user-id="${userId}"]`);
+        if (value) value.checked = false;
+        if (chip) chip.hidden = true;
+        filterAssignees();
+      });
+    });
+    assigneeSearch?.addEventListener("input", filterAssignees);
     const syncRecurrence = () => {
       const preset = repeatPreset?.value ?? "none";
       const custom = editor?.querySelector(".recurrence-custom");
@@ -996,6 +1152,9 @@ class VikunjaTodoCard extends HTMLElement {
       const label_ids = Array.from(editor.querySelectorAll('[name="labels"]:checked')).map(
         (input) => Number(input.value),
       );
+      const assignee_ids = Array.from(
+        editor.querySelectorAll('[name="assignees"]:checked'),
+      ).map((input) => Number(input.value));
       const task_id = Number(this._editingTask.id);
       const recurrence = this._recurrenceFromForm(form);
       this._editingTask = undefined;
@@ -1013,6 +1172,7 @@ class VikunjaTodoCard extends HTMLElement {
           ? String(form.get("color") ?? "").replace("#", "")
           : "",
         label_ids,
+        assignee_ids,
       });
     });
     editor?.querySelector(".cancel-editor")?.addEventListener("click", () => {
@@ -1323,6 +1483,23 @@ class VikunjaTodoCard extends HTMLElement {
     return (parsed.body.textContent ?? "").replace(/\s+/g, " ").trim();
   }
 
+  _userName(user) {
+    return String(user?.name || user?.username || "").trim();
+  }
+
+  _eligibleAssignees(task) {
+    const users = this._data?.project_users?.[String(task.project_id)] ?? [];
+    const combined = new Map();
+    for (const user of [...users, ...(task.assignees ?? [])]) {
+      if (user?.id !== undefined) combined.set(Number(user.id), user);
+    }
+    return [...combined.values()]
+      .filter((user) => this._userName(user))
+      .sort((left, right) =>
+        this._userName(left).localeCompare(this._userName(right), this._language()),
+      );
+  }
+
   _formatBytes(value) {
     const bytes = Number(value) || 0;
     if (bytes < 1024) return `${bytes} B`;
@@ -1360,6 +1537,14 @@ class VikunjaTodoCard extends HTMLElement {
       if (this._config.entry_id && event.data?.entry_id !== this._config.entry_id) return;
       void this._load();
     }, "vikunja_time_tracking_updated");
+  }
+
+  async _subscribeActivity() {
+    if (!this._hass?.connection?.subscribeEvents || this._unsubscribeActivity) return;
+    this._unsubscribeActivity = await this._hass.connection.subscribeEvents((event) => {
+      if (this._config.entry_id && event.data?.entry_id !== this._config.entry_id) return;
+      if (!this._loading) void this._load();
+    }, "vikunja_task_hub_action");
   }
 
   _recurrenceValues(task) {

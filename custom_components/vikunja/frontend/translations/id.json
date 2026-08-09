@@ -22,6 +22,7 @@
   "addTask": "Tambah tugas",
   "selectAll": "Pilih semua",
   "selected": "dipilih",
+  "myTasks": "Tugas Saya",
   "filterTasks": "Saring judul tugas",
   "project": "Proyek",
   "categories": "Kategori",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Tambahkan timer dari tindakan cepat. Mulai dan Jeda langsung bekerja; Hentikan mencatat waktu, tanggal, dan Catatan dalam komentar yang dapat dihapus.",
   "tipsScheduleGuide": "Jadwalkan Mulai, Jeda, atau Hentikan dengan Menit, Detik, atau Tanggal dan waktu, lalu Simpan. Batalkan tindakan satu per satu di atas Catatan.",
   "tipsBulkGuide": "Tindakan massal memindahkan tugas, mengubah kategori atau status, menghapus, atau membuat dan memilih proyek baru.",
-  "tipsIndicatorsGuide": "Baris menampilkan prioritas, kemajuan, label, warna, pengulangan, dan jumlah komentar. Pengambilan lampiran bergantung pada browser dan perangkat."
+  "tipsIndicatorsGuide": "Baris menampilkan prioritas, kemajuan, label, warna, pengulangan, dan jumlah komentar. Pengambilan lampiran bergantung pada browser dan perangkat.",
+  "assignees": "Penanggung jawab",
+  "assignTo": "Tetapkan ke",
+  "assignToMe": "Tetapkan kepada saya",
+  "searchAssignees": "Cari penanggung jawab",
+  "unassign": "Batalkan penetapan"
 }

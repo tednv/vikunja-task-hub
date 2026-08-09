@@ -22,6 +22,7 @@
   "addTask": "Dodaj zadanie",
   "selectAll": "Zaznacz wszystko",
   "selected": "zaznaczono",
+  "myTasks": "Moje zadania",
   "filterTasks": "Filtruj tytuły zadań",
   "project": "Projekt",
   "categories": "Kategorie",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Dodaj minutnik z szybkich działań. Start i Pauza działają natychmiast; Zatrzymaj zapisuje czas, datę i Notatki w usuwalnym komentarzu.",
   "tipsScheduleGuide": "Zaplanuj Start, Pauzę lub Zatrzymanie przez Minuty, Sekundy albo Datę i czas, potem Zapisz. Anuluj każdą akcję nad Notatkami.",
   "tipsBulkGuide": "Działania zbiorcze przenoszą zadania, zmieniają kategorie lub stan, usuwają albo tworzą i wybierają nowy projekt.",
-  "tipsIndicatorsGuide": "Wiersze pokazują priorytet, postęp, etykiety, kolor, cykliczność i liczbę komentarzy. Przechwytywanie zależy od przeglądarki i urządzenia."
+  "tipsIndicatorsGuide": "Wiersze pokazują priorytet, postęp, etykiety, kolor, cykliczność i liczbę komentarzy. Przechwytywanie zależy od przeglądarki i urządzenia.",
+  "assignees": "Osoby przypisane",
+  "assignTo": "Przypisz do",
+  "assignToMe": "Przypisz do mnie",
+  "searchAssignees": "Szukaj osób",
+  "unassign": "Cofnij przypisanie"
 }

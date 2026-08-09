@@ -22,6 +22,7 @@
   "addTask": "Cuir tasc leis",
   "selectAll": "Roghnaigh uile",
   "selected": "roghnaithe",
+  "myTasks": "Mo thascanna",
   "filterTasks": "Scag teidil tascanna",
   "project": "Tionscadal",
   "categories": "Catagóirí",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Cuir amadóir leis ó ghníomhartha tapa. Gníomhaíonn Tosaigh agus Sos láithreach; scríobhann Stop an t-am, dáta agus Nótaí i nóta tráchta inscriosta.",
   "tipsScheduleGuide": "Sceideal Tosaigh, Sos nó Stop le Nóiméid, Soicindí nó Dáta agus am, ansin Sábháil. Cealaigh gach gníomh os cionn Nótaí ar leithligh.",
   "tipsBulkGuide": "Bogann gníomhartha bulc tascanna, athraíonn siad catagóirí nó stádas, scriosann siad, nó cruthaíonn agus roghnaíonn siad tionscadal nua.",
-  "tipsIndicatorsGuide": "Taispeánann sraitheanna tosaíocht, dul chun cinn, lipéid, dath, athdhéanamh agus líon nótaí tráchta. Braitheann gabháil ceangaltáin ar an mbrabhsálaí agus gléas."
+  "tipsIndicatorsGuide": "Taispeánann sraitheanna tosaíocht, dul chun cinn, lipéid, dath, athdhéanamh agus líon nótaí tráchta. Braitheann gabháil ceangaltáin ar an mbrabhsálaí agus gléas.",
+  "assignees": "Sannaithe",
+  "assignTo": "Sann do",
+  "assignToMe": "Sann domsa",
+  "searchAssignees": "Cuardaigh sannaithe",
+  "unassign": "Díshann"
 }

@@ -22,6 +22,7 @@
   "addTask": "Görev ekle",
   "selectAll": "Tümünü seç",
   "selected": "seçildi",
+  "myTasks": "Görevlerim",
   "filterTasks": "Görev başlıklarını filtrele",
   "project": "Proje",
   "categories": "Kategoriler",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Hızlı işlemlerden zamanlayıcı ekleyin. Başlat ve Duraklat hemen çalışır; Durdur süreyi, tarihi ve Notları silinebilir yoruma yazar.",
   "tipsScheduleGuide": "Dakika, Saniye veya Tarih ve saat ile Başlat, Duraklat ya da Durdur planlayıp Kaydet seçin. İşlemleri Notların üstünden tek tek iptal edin.",
   "tipsBulkGuide": "Toplu işlemler görevleri taşır, kategori veya durumu değiştirir, siler ya da yeni proje oluşturup seçer.",
-  "tipsIndicatorsGuide": "Satırlar öncelik, ilerleme, etiket, renk, tekrar ve yorum sayısını gösterir. Ek yakalama tarayıcıya ve cihaza bağlıdır."
+  "tipsIndicatorsGuide": "Satırlar öncelik, ilerleme, etiket, renk, tekrar ve yorum sayısını gösterir. Ek yakalama tarayıcıya ve cihaza bağlıdır.",
+  "assignees": "Sorumlular",
+  "assignTo": "Şuna ata",
+  "assignToMe": "Bana ata",
+  "searchAssignees": "Sorumlu ara",
+  "unassign": "Atamayı kaldır"
 }

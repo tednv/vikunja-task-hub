@@ -22,6 +22,7 @@
   "addTask": "Adicionar tarefa",
   "selectAll": "Selecionar tudo",
   "selected": "selecionadas",
+  "myTasks": "Minhas tarefas",
   "filterTasks": "Filtrar títulos das tarefas",
   "project": "Projeto",
   "categories": "Categorias",
@@ -128,5 +129,10 @@
   "tipsTimerGuide": "Adicione um temporizador nas ações rápidas. Iniciar e Pausa agem imediatamente; Parar regista tempo, data e Notas num comentário removível.",
   "tipsScheduleGuide": "Agende Iniciar, Pausa ou Parar com Minutos, Segundos ou Data e hora e escolha Guardar. Cancele ações individualmente acima de Notas.",
   "tipsBulkGuide": "Ações em massa movem tarefas, alteram categorias ou estado, eliminam ou criam e selecionam um novo projeto.",
-  "tipsIndicatorsGuide": "As linhas mostram prioridade, progresso, etiquetas, cor, recorrência e comentários. A captura de anexos depende do navegador e dispositivo."
+  "tipsIndicatorsGuide": "As linhas mostram prioridade, progresso, etiquetas, cor, recorrência e comentários. A captura de anexos depende do navegador e dispositivo.",
+  "assignees": "Responsáveis",
+  "assignTo": "Atribuir a",
+  "assignToMe": "Atribuir a mim",
+  "searchAssignees": "Pesquisar responsáveis",
+  "unassign": "Remover atribuição"
 }

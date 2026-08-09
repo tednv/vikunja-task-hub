@@ -28,6 +28,13 @@ card._vikunjaUrl = "https://example.com/vikunja";
 card._selectedProject = "12";
 card._data = {
   projects: [{ id: 12, title: "Example" }],
+  current_user: { id: 21, name: "Example Person", username: "example" },
+  project_users: {
+    "12": [
+      { id: 21, name: "Example Person", username: "example" },
+      { id: 22, name: "Second Person", username: "second" },
+    ],
+  },
   labels: [{ id: 3, title: "Planning", color: "336699" }],
   tasks: [
     {
@@ -43,6 +50,7 @@ card._data = {
       percent_done: 0.4,
       hex_color: "224466",
       comment_count: 2,
+      assignees: [{ id: 21, name: "Example Person", username: "example" }],
       labels: [3],
       attachments: [],
     },
@@ -58,6 +66,25 @@ assert.match(row, /Comments \(2\)/);
 assert.match(row, /Planning/);
 assert.match(row, /width:40%/);
 assert.match(row, /background:#224466/);
+assert.match(row, /<span class="assignee-list"><em class="assignee-names">\(Example Person\)<\/em><\/span>Synthetic task/);
+card._render();
+assert.match(card.shadowRoot.innerHTML, /class="my-tasks-toggle [^"]*"[^>]*>My Tasks \(1\)<\/button>/);
+card._myTasksOnly = true;
+assert.deepEqual(card._filteredTasks("").map((task) => task.id), [7]);
+card._myTasksOnly = false;
+const originalAssignees = card._data.tasks[0].assignees;
+card._data.tasks[0].assignees = [];
+card._render();
+assert.doesNotMatch(card.shadowRoot.innerHTML, /<button[^>]*my-tasks-toggle/);
+card._data.tasks[0].assignees = originalAssignees;
+const multiAssigneeRow = card._taskRow({
+  ...card._data.tasks[0],
+  assignees: [
+    { id: 21, name: "Example Person", username: "example" },
+    { id: 22, name: "Second Person", username: "second" },
+  ],
+});
+assert.match(multiAssigneeRow, /\(Example Person, Second Person\)/);
 assert.ok(row.indexOf("task-color") < row.indexOf('type="checkbox"'));
 assert.match(row, /Timer \(<span class="timer-state-icon">⏱<\/span> <span class="timer-elapsed"/);
 assert.match(row, /timer-toggle/);
@@ -100,16 +127,45 @@ assert.match(card._contextMenuTemplate(), /data-context="priority-up"/);
 assert.match(card._contextMenuTemplate(), /data-context="priority-down"/);
 assert.match(card._contextMenuTemplate(), /data-context="priority-clear"/);
 assert.match(card._contextMenuTemplate(), /class="context-color-input" type="color"/);
+assert.match(card._contextMenuTemplate(), /<summary>Assign to ›<\/summary>/);
+assert.match(card._contextMenuTemplate(), /context-assignee-search/);
+assert.match(card._contextMenuTemplate(), /data-assignee-id="22"[^>]*>Second Person/);
+assert.doesNotMatch(card._contextMenuTemplate(), /data-assignee-id="21">Example Person/);
 assert.doesNotMatch(card._contextMenuTemplate(), /data-context="time-|timer-limit-input|timer-note-input/);
 
 card._contextMenu = undefined;
 card._render();
 assert.doesNotMatch(card.shadowRoot.innerHTML, /Select all \(0 selected\)/);
-assert.match(card.shadowRoot.innerHTML, /tips\.html\?lang=en&amp;v=0\.32\.1|tips\.html\?lang=en&v=0\.32\.1/);
+assert.match(card.shadowRoot.innerHTML, /tips\.html\?lang=en&amp;v=0\.35\.1|tips\.html\?lang=en&v=0\.35\.1/);
 card._selectedTasks.add(7);
 card._render();
 assert.match(card.shadowRoot.innerHTML, /Select all \(1 selected\)/);
 assert.match(card.shadowRoot.innerHTML, /class="clear-selection">Cancel<\/button>/);
+
+let activityCallback;
+let activityLoads = 0;
+card._config = { entry_id: "example-entry" };
+card._hass = {
+  locale: { language: "en" },
+  connection: {
+    subscribeEvents: async (callback, eventType) => {
+      if (eventType === "vikunja_task_hub_action") activityCallback = callback;
+      return () => {};
+    },
+  },
+};
+card._load = async () => { activityLoads += 1; };
+await card._subscribeActivity();
+activityCallback({ data: { entry_id: "another-entry" } });
+activityCallback({ data: { entry_id: "example-entry" } });
+await new Promise((resolve) => setTimeout(resolve, 0));
+assert.equal(activityLoads, 1);
+card._loading = true;
+activityCallback({ data: { entry_id: "example-entry" } });
+await new Promise((resolve) => setTimeout(resolve, 0));
+assert.equal(activityLoads, 1);
+card._loading = false;
+
 card._editingTask = card._data.tasks[0];
 card._comments.set(7, [{ id: 4, author: "Example person", comment: "Synthetic comment", created: "2026-07-22T12:30:00Z" }]);
 card._render();
@@ -117,6 +173,11 @@ assert.match(card.shadowRoot.innerHTML, /class="add-comment"/);
 assert.match(card.shadowRoot.innerHTML, /data-comment="4"/);
 assert.match(card.shadowRoot.innerHTML, /Synthetic comment/);
 assert.match(card.shadowRoot.innerHTML, /comment-time/);
+assert.match(card.shadowRoot.innerHTML, /name="assignees" value="21" checked/);
+assert.match(card.shadowRoot.innerHTML, /name="assignees" value="22"/);
+assert.match(card.shadowRoot.innerHTML, /class="assignee-search"/);
+assert.match(card.shadowRoot.innerHTML, /data-remove-assignee="21"/);
+assert.match(card.shadowRoot.innerHTML, /data-add-assignee="22"/);
 const uncoloredTask = { ...card._data.tasks[0], id: 8, hex_color: "", comment_count: 0 };
 card._openComments.add(8);
 const uncoloredRow = card._taskRow(uncoloredTask);
@@ -124,6 +185,13 @@ assert.doesNotMatch(uncoloredRow, /task-color/);
 assert.doesNotMatch(uncoloredRow, /comments-panel|noComments/);
 const untimedRow = card._taskRow({ ...uncoloredTask, id: 9 });
 assert.doesNotMatch(untimedRow, /time-tracker|timer-state-icon/);
+const unassignedRow = card._taskRow({ ...uncoloredTask, id: 10, assignees: [] });
+assert.doesNotMatch(unassignedRow, /assignee-names/);
+card._data.tasks.push({ ...uncoloredTask, id: 10, assignees: [] });
+card._contextMenu = { taskId: 10, x: 10, y: 10 };
+assert.match(card._contextMenuTemplate(), /data-assignee-id="21">Assign to me/);
+card._contextMenu = { taskId: 7, x: 10, y: 10, mode: "unassign" };
+assert.match(card._contextMenuTemplate(), /data-unassign-id="21">Unassign Example Person/);
 card._data.tasks.push({ ...uncoloredTask, id: 9 });
 card._contextMenu = { taskId: 9, x: 10, y: 10 };
 const untimedMenu = card._contextMenuTemplate();
