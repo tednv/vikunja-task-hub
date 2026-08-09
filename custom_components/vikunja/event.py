@@ -37,9 +37,7 @@ class VikunjaAutomationTarget(EventEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to successful integration actions."""
-        self.async_on_remove(
-            self.hass.bus.async_listen(AUTOMATION_EVENT, self._handle_action)
-        )
+        self.async_on_remove(self.hass.bus.async_listen(AUTOMATION_EVENT, self._handle_action))
 
     @callback
     def _handle_action(self, event: Event) -> None:

@@ -487,7 +487,7 @@ class VikunjaTodoCard extends HTMLElement {
         <div class="bulk-bar">
           <div class="selection-tools">
             <label class="select-all"><input class="select-visible" type="checkbox" ${allVisibleSelected ? "checked" : ""} ${visibleIds.length ? "" : "disabled"}> ${this._t("selectAll")}${this._selectedTasks.size ? ` (${this._selectedTasks.size} ${this._t("selected")})` : ""}</label>
-            ${myTaskCount ? `<button type="button" class="my-tasks-toggle ${this._myTasksOnly ? "active" : ""}" aria-pressed="${this._myTasksOnly}" title="${this._t("myTasks")}">${this._t("myTasks")} (${myTaskCount})</button>` : ""}
+            ${myTaskCount || this._myTasksOnly ? `<button type="button" class="my-tasks-toggle ${this._myTasksOnly ? "active" : ""}" aria-pressed="${this._myTasksOnly}" title="${this._t("myTasks")}">${this._t("myTasks")} (${myTaskCount})</button>` : ""}
             ${this._selectedTasks.size ? `<button type="button" class="clear-selection">${this._t("cancel")}</button>` : ""}
             <input class="task-filter" type="search" aria-label="${this._t("filterTasks")}" placeholder="${this._t("filterTasks")}" value="${this._escape(this._search)}">
           </div>

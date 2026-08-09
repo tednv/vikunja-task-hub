@@ -76,6 +76,10 @@ const originalAssignees = card._data.tasks[0].assignees;
 card._data.tasks[0].assignees = [];
 card._render();
 assert.doesNotMatch(card.shadowRoot.innerHTML, /<button[^>]*my-tasks-toggle/);
+card._myTasksOnly = true;
+card._render();
+assert.match(card.shadowRoot.innerHTML, /class="my-tasks-toggle active"[^>]*>My Tasks \(0\)<\/button>/);
+card._myTasksOnly = false;
 card._data.tasks[0].assignees = originalAssignees;
 const multiAssigneeRow = card._taskRow({
   ...card._data.tasks[0],

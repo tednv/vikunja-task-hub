@@ -18,13 +18,13 @@ from .assignees import (
     set_task_assignees,
     task_assignees,
 )
-from .automation import event_data, fire_events
 from .attachments import (
     attachment_metadata,
     delete_attachment,
     download_attachment,
     upload_attachments,
 )
+from .automation import event_data, fire_events
 from .comments import add_task_comment, delete_task_comment, get_task_comments
 from .const import DOMAIN, LOGGER
 from .labels import add_task_label, remove_task_label
@@ -482,9 +482,7 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                         task_title=task.title,
                         previous_project_id=previous_project_id,
                         previous_done=previous_done,
-                        done_changed=(
-                            "done" in msg and bool(msg["done"]) != previous_done
-                        ),
+                        done_changed=("done" in msg and bool(msg["done"]) != previous_done),
                     )
                 )
         elif action == "task_bulk_delete":
@@ -677,9 +675,7 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
             time_tracking_changed = True
 
         if not automation_events:
-            automation_events.append(
-                event_data(data["entry_id"], action, msg, **event_details)
-            )
+            automation_events.append(event_data(data["entry_id"], action, msg, **event_details))
         fire_events(hass, automation_events)
         result = await _payload(hass, data)
         if created_project_id is not None:

@@ -6,6 +6,12 @@ The project uses semantic versioning. Dates use ISO 8601 format.
 
 ## [Unreleased]
 
+## [0.35.2] - 2026-08-09
+
+### Fixed
+
+- Keep an active **My Tasks (N)** toggle visible at zero matches so users can return to the full task view after removing the final assignment.
+
 ## [0.35.1] - 2026-08-09
 
 ### Added

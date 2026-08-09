@@ -6,9 +6,9 @@ from datetime import datetime
 from typing import Any
 
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-import voluptuous as vol
 
 from .assignees import set_task_assignees, task_assignees
 from .automation import event_data, fire_events
@@ -141,6 +141,7 @@ async def _async_handle_service(hass: HomeAssistant, call: ServiceCall) -> None:
 
 def async_register_services(hass: HomeAssistant) -> None:
     """Register Home Assistant automation actions once."""
+
     async def async_handle(call: ServiceCall) -> None:
         await _async_handle_service(hass, call)
 
