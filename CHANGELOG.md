@@ -6,6 +6,30 @@ The project uses semantic versioning. Dates use ISO 8601 format.
 
 ## [Unreleased]
 
+## [0.36.8] - 2026-08-14
+
+### Added
+
+- Add an optional sortable table view while retaining Compact as the default.
+- Add columns for title, project, priority, status, due date, assignees, categories, progress, creation time, and Vikunja position.
+- Add clear P0 through P5 priority badges and a dedicated column for multiple assignees.
+- Add translated table controls for all 27 supported dashboard languages.
+- Add persistent View Options for columns, ordering, widths, sorting, and title and description line limits.
+- Let users drag headings to reorder columns and drag heading edges to resize them, with equivalent controls available through right-click or long-press.
+
+### Changed
+
+- Place the compact view button beside Search and use it to switch between Compact and Table modes.
+- Keep active and completed tasks naturally grouped when no custom sorting is selected.
+- Wrap long table titles and descriptions, limit them to three lines by default, and allow limits from one through ten lines.
+- Show Project automatically in All Projects while keeping Vikunja position available as an optional sortable column.
+
+### Fixed
+
+- Let users clear an active table sort by clicking its highlighted arrow again.
+- Make table widths predictable and expose effective default or saved widths in View Options.
+- Add runtime coverage for table configuration, column widths, sorting, assignees, and responsive view behavior.
+
 ## [0.35.2] - 2026-08-09
 
 ### Fixed

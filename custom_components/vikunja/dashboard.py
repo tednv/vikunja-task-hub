@@ -61,6 +61,13 @@ def _hex_color(value: Any) -> str:
     )
 
 
+def _optional_float(value: Any) -> float | None:
+    try:
+        return None if value in (None, "") else float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 async def _projects_and_tasks(api) -> tuple[list, list]:
     projects = await api.get_projects()
     task_groups = await asyncio.gather(*(api.get_tasks(project.id) for project in projects))
@@ -163,6 +170,7 @@ async def _payload(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
             "repeat_after": int(task.data.get("repeat_after") or 0),
             "repeat_mode": int(task.data.get("repeat_mode") or 0),
             "priority": int(task.data.get("priority") or 0),
+            "position": _optional_float(task.data.get("position")),
             "percent_done": float(task.data.get("percent_done") or 0),
             "hex_color": _hex_color(task.data.get("hex_color")),
             "comment_count": int(task.data.get("comment_count") or 0),

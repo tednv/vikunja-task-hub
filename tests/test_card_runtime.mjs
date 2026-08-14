@@ -47,6 +47,7 @@ card._data = {
       repeat_after: 0,
       repeat_mode: 0,
       priority: 3,
+      position: 42.5,
       percent_done: 0.4,
       hex_color: "224466",
       comment_count: 2,
@@ -69,6 +70,65 @@ assert.match(row, /background:#224466/);
 assert.match(row, /<span class="assignee-list"><em class="assignee-names">\(Example Person\)<\/em><\/span>Synthetic task/);
 card._render();
 assert.match(card.shadowRoot.innerHTML, /class="my-tasks-toggle [^"]*"[^>]*>My Tasks \(1\)<\/button>/);
+assert.doesNotMatch(card.shadowRoot.innerHTML, /class="task-table"/);
+assert.ok(
+  card.shadowRoot.innerHTML.indexOf('class="task-filter"') <
+    card.shadowRoot.innerHTML.indexOf('class="view-options-toggle'),
+);
+assert.match(card.shadowRoot.innerHTML, /aria-label="View options: Compact"[^>]*>☰<\/button>/);
+card.setConfig({ view_mode: "table" });
+assert.match(card.shadowRoot.innerHTML, /class="task-table"/);
+assert.match(card.shadowRoot.innerHTML, /aria-label="View options: Table"[^>]*>▦<\/button>/);
+assert.match(card.shadowRoot.innerHTML, /data-priority="3"[^>]*>P3<\/span>/);
+assert.match(card.shadowRoot.innerHTML, /class="status-badge active">Active<\/span>/);
+assert.match(card.shadowRoot.innerHTML, /\(Example Person\)/);
+assert.match(card.shadowRoot.innerHTML, /Planning/);
+assert.match(card.shadowRoot.innerHTML, /data-sort-key="due"/);
+assert.match(card.shadowRoot.innerHTML, /data-sort-key="progress"/);
+assert.match(card.shadowRoot.innerHTML, /data-sort-key="priority" data-sort-direction="asc"/);
+assert.match(card.shadowRoot.innerHTML, /data-sort-key="priority" data-sort-direction="desc"/);
+assert.doesNotMatch(card.shadowRoot.innerHTML, /data-sort-key="position"/);
+card._viewOptionsOpen = true;
+card._render();
+assert.match(card.shadowRoot.innerHTML, /class="dialog view-options-dialog"/);
+assert.match(card.shadowRoot.innerHTML, /data-view-column="priority" checked/);
+assert.match(card.shadowRoot.innerHTML, /class="view-options-sort"/);
+assert.match(card.shadowRoot.innerHTML, /class="view-options-direction"/);
+assert.match(card.shadowRoot.innerHTML, /class="title-line-limit"/);
+assert.match(card.shadowRoot.innerHTML, /class="description-line-limit"/);
+assert.match(card.shadowRoot.innerHTML, /value=""[^>]*>No sorting<\/option>/);
+assert.match(card.shadowRoot.innerHTML, /data-column-width="title"[^>]*value="340"/);
+assert.match(card.shadowRoot.innerHTML, /class="reset-view-options"/);
+assert.match(card.shadowRoot.innerHTML, /data-column-width="priority"/);
+assert.match(card.shadowRoot.innerHTML, /data-move-column="up" data-column="priority"/);
+assert.match(card.shadowRoot.innerHTML, /data-move-column="down" data-column="priority"/);
+assert.match(card.shadowRoot.innerHTML, /Top to bottom appears left to right/);
+assert.match(card.shadowRoot.innerHTML, /data-table-column="priority" draggable="true"/);
+assert.match(card.shadowRoot.innerHTML, /data-resize-column="priority"/);
+card._viewOptionsOpen = false;
+card.setConfig({ view_mode: "table", table_columns: ["position", "title"] });
+assert.match(card.shadowRoot.innerHTML, /data-sort-key="position"/);
+assert.match(card.shadowRoot.innerHTML, /42\.5/);
+card.setConfig({ view_mode: "table" });
+card._sortKey = "priority";
+card._sortDirection = "desc";
+const lowerPriority = { ...card._data.tasks[0], id: 8, priority: 1, position: 1 };
+assert.ok(card._compareTasks(card._data.tasks[0], lowerPriority) < 0);
+const completedTask = { ...card._data.tasks[0], id: 9, done: true, priority: 5 };
+assert.ok(card._compareTasks(card._data.tasks[0], completedTask) < 0);
+card._toggleTableSort("priority", "desc");
+assert.equal(card._sortKey, null);
+assert.equal(card._compareTasks(card._data.tasks[0], lowerPriority), 0);
+assert.ok(card._compareTasks(card._data.tasks[0], completedTask) < 0);
+card._toggleTableSort("title", "asc");
+assert.equal(card._sortKey, "title");
+assert.equal(card._sortDirection, "asc");
+card.setConfig({ view_mode: "compact" });
+card._viewOptionsOpen = true;
+card._render();
+assert.doesNotMatch(card.shadowRoot.innerHTML, /data-view-column=/);
+assert.doesNotMatch(card.shadowRoot.innerHTML, /class="view-options-sort"/);
+card._viewOptionsOpen = false;
 card._myTasksOnly = true;
 assert.deepEqual(card._filteredTasks("").map((task) => task.id), [7]);
 card._myTasksOnly = false;
@@ -140,7 +200,7 @@ assert.doesNotMatch(card._contextMenuTemplate(), /data-context="time-|timer-limi
 card._contextMenu = undefined;
 card._render();
 assert.doesNotMatch(card.shadowRoot.innerHTML, /Select all \(0 selected\)/);
-assert.match(card.shadowRoot.innerHTML, /tips\.html\?lang=en&amp;v=0\.35\.1|tips\.html\?lang=en&v=0\.35\.1/);
+assert.match(card.shadowRoot.innerHTML, /tips\.html\?lang=en&amp;v=0\.36\.8|tips\.html\?lang=en&v=0\.36\.8/);
 card._selectedTasks.add(7);
 card._render();
 assert.match(card.shadowRoot.innerHTML, /Select all \(1 selected\)/);
@@ -227,6 +287,14 @@ const tipsSource = fs.readFileSync(
   new URL("../custom_components/vikunja/frontend/tips.html", import.meta.url),
   "utf8",
 );
+const cardSource = fs.readFileSync(
+  new URL("../custom_components/vikunja/frontend/vikunja-todo-card.js", import.meta.url),
+  "utf8",
+);
+assert.match(cardSource, /-webkit-line-clamp:\$\{this\._descriptionLineLimit\}/);
+assert.match(cardSource, /-webkit-line-clamp:\$\{this\._titleLineLimit\}/);
+assert.match(cardSource, /\.task-table \.table-title[^}]*width:340px/);
+assert.match(cardSource, /\.table-title-main[^}]*max-width:100%/);
 assert.match(tipsSource, /class="guide"/);
 for (const key of [
   "tipsSelectionGuide",

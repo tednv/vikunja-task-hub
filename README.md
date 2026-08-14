@@ -91,6 +91,8 @@ Vikunja Task Hub follows the language selected in Home Assistant and falls back 
 
 - Add tasks without leaving the dashboard.
 - Search task titles as you type without interrupting keyboard focus.
+- Use the small button at the far right of Search to switch between the familiar compact list and a sortable multi-column table. Right-click or long-press it to choose, reorder, and size table columns or set the sort field and direction; those choices are remembered per card. On desktop, headings can also be dragged left or right to reorder them, and their right edges can be dragged to resize them. Each heading provides explicit ascending and descending controls.
+- Sort the table by position, title, project, priority, status, due date, assignees, categories, progress, or creation time, with completed tasks kept together unless sorting by status.
 - Toggle **My Tasks (N)** beside selection controls whenever the current project/category view contains tasks assigned to the authenticated user.
 - Sort higher-priority tasks first, then newest first within the same priority, and keep completed tasks in a separate collapsible section.
 - Open any task to edit its title, description, due date, labels, priority, progress, color, recurrence, and completion state.
@@ -235,6 +237,33 @@ storage_key: optional-unique-card-key
 
 `storage_key` controls where the card remembers its last selected project. It contains no token or task content.
 
+The compact view remains the default. Table mode can be selected from the card or configured in YAML:
+
+```yaml
+type: custom:vikunja-todo-card
+view_mode: table
+table_columns:
+  - title
+  - project
+  - priority
+  - status
+  - due
+  - assignees
+  - categories
+  - progress
+table_sort: priority
+table_sort_direction: desc
+table_column_widths:
+  title: 340
+  assignees: 180
+table_title_lines: 3
+table_description_lines: 3
+```
+
+Available columns are `position`, `title`, `project`, `priority`, `status`, `due`, `assignees`, `categories`, `progress`, and `created`. The title column is always included. The project column is shown only in **All projects**, where it adds useful context. Optional `table_column_widths` values are pixel widths from 80 through 600; `table_title_lines` and `table_description_lines` accept values from 1 through 10.
+
+In Table view, drag headings to reorder columns and drag a heading's right edge to resize it. Click an ascending or descending arrow to sort; click the active arrow again to return to the natural active/completed grouping. Right-click or long-press the view button for the same settings, current widths, line limits, a **No sorting** choice, and **Reset defaults**. Preferences are saved in the browser. Set `show_view_toggle: false` to lock the card to its YAML configuration.
+
 ## Project and category deletion
 
 - **Inbox** is Vikunja's default task project and cannot be deleted from the card.
@@ -296,7 +325,7 @@ Never include API tokens, private service URLs, task content, or Home Assistant 
 ## Roadmap
 
 - Add project renaming with the same administrator and confirmation safeguards used for project management.
-- Add a preferences page for customizing task sort order.
+- Add a preferences page for managing view, sorting, display density, and other card defaults without editing YAML.
 - Add subtasks for breaking larger work into independently trackable steps.
 - Add task reminders while continuing to use Vikunja as the scheduling source of truth.
 - Add task relations for blocking, related, and cross-project task links.
