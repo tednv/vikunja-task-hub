@@ -28,7 +28,7 @@ from .automation import event_data, fire_events
 from .comments import add_task_comment, delete_task_comment, get_task_comments
 from .const import DOMAIN, LOGGER
 from .labels import add_task_label, remove_task_label
-from .tasks import get_project_tasks_with_comment_counts
+from .tasks import get_project_dashboard_tasks, move_task_to_bucket
 from .time_tracking import TaskTimeTracker, format_duration
 
 TIME_TRACKING_EVENT = "vikunja_time_tracking_updated"
@@ -61,32 +61,26 @@ def _hex_color(value: Any) -> str:
     )
 
 
-def _optional_float(value: Any) -> float | None:
-    try:
-        return None if value in (None, "") else float(value)
-    except (TypeError, ValueError):
-        return None
-
-
 async def _projects_and_tasks(api) -> tuple[list, list]:
     projects = await api.get_projects()
     task_groups = await asyncio.gather(*(api.get_tasks(project.id) for project in projects))
     return projects, [task for group in task_groups for task in group]
 
 
-async def _project_dashboard_data(api, project_id: int) -> tuple[list, list]:
+async def _project_dashboard_data(api, project_id: int) -> tuple[list, list, dict]:
     """Return assignment choices and tasks for one authorized project."""
-    users, tasks = await asyncio.gather(
+    users, task_result = await asyncio.gather(
         get_project_users(api, project_id),
-        get_project_tasks_with_comment_counts(api, project_id),
+        get_project_dashboard_tasks(api, project_id),
         return_exceptions=True,
     )
-    if isinstance(tasks, BaseException):
-        raise tasks
+    if isinstance(task_result, BaseException):
+        raise task_result
     if isinstance(users, BaseException):
         LOGGER.warning("Unable to load eligible assignees for project %s", project_id)
         users = []
-    return users, tasks
+    tasks, bucket_view = task_result
+    return users, tasks, bucket_view
 
 
 async def _current_user(api) -> dict[str, Any] | None:
@@ -156,7 +150,7 @@ async def _payload(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     if current_user is not None:
         data["current_user_id"] = current_user["id"]
     project_results = results[2:]
-    dashboard_tasks = [task for _, project_tasks in project_results for task in project_tasks]
+    dashboard_tasks = [task for _, project_tasks, _ in project_results for task in project_tasks]
     projects = [{"id": project.id, "title": project.title} for project in project_models]
     tasks = [
         {
@@ -170,7 +164,8 @@ async def _payload(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
             "repeat_after": int(task.data.get("repeat_after") or 0),
             "repeat_mode": int(task.data.get("repeat_mode") or 0),
             "priority": int(task.data.get("priority") or 0),
-            "position": _optional_float(task.data.get("position")),
+            "bucket_id": task.data.get("dashboard_bucket_id"),
+            "bucket_title": task.data.get("dashboard_bucket_title") or "",
             "percent_done": float(task.data.get("percent_done") or 0),
             "hex_color": _hex_color(task.data.get("hex_color")),
             "comment_count": int(task.data.get("comment_count") or 0),
@@ -185,7 +180,12 @@ async def _payload(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
         "current_user": current_user,
         "project_users": {
             str(project.id): users
-            for project, (users, _) in zip(project_models, project_results, strict=True)
+            for project, (users, _, _) in zip(project_models, project_results, strict=True)
+        },
+        "project_bucket_views": {
+            str(project.id): bucket_view
+            for project, (_, _, bucket_view) in zip(project_models, project_results, strict=True)
+            if bucket_view
         },
         "labels": sorted(
             [
@@ -324,6 +324,8 @@ ACTION_SCHEMA = {
     vol.Optional("hex_color"): vol.Match(r"^(?:|[0-9A-Fa-f]{6})$"),
     vol.Optional("label_ids"): [vol.Coerce(int)],
     vol.Optional("assignee_ids"): [vol.Coerce(int)],
+    vol.Optional("bucket_id"): vol.Coerce(int),
+    vol.Optional("bucket_view_id"): vol.Coerce(int),
     vol.Optional("delete_tasks", default=False): bool,
     vol.Optional("label_operation"): vol.In({"add", "remove"}),
     vol.Optional("attachment_id"): vol.Coerce(int),
@@ -404,7 +406,8 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                     update[field] = msg[field]
             if "due" in msg:
                 update["due_date"] = msg["due"] or None
-            await task.update(update)
+            if update:
+                await task.update(update)
             if "label_ids" in msg:
                 desired_labels = set(msg["label_ids"])
                 current_labels = {label.id for label in task.labels}
@@ -414,6 +417,16 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                     await remove_task_label(api, task.id, label_id)
             if "assignee_ids" in msg:
                 await set_task_assignees(api, task.id, msg["assignee_ids"])
+            if "bucket_id" in msg or "bucket_view_id" in msg:
+                if "bucket_id" not in msg or "bucket_view_id" not in msg:
+                    raise ValueError("Both bucket and Kanban view are required")
+                await move_task_to_bucket(
+                    api,
+                    previous_project_id,
+                    msg["bucket_view_id"],
+                    msg["bucket_id"],
+                    task.id,
+                )
             desired_assignee_ids = set(msg.get("assignee_ids", previous_assignee_ids))
             automation_events.append(
                 event_data(
@@ -440,6 +453,7 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                             "hex_color",
                             "label_ids",
                             "assignee_ids",
+                            "bucket_id",
                         )
                         if field in msg
                     ),

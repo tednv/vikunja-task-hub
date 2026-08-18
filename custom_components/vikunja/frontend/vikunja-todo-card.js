@@ -1,14 +1,36 @@
-import { TRANSLATIONS } from "./vikunja-todo-card-translations.js?v=0.36.8";
+import { TRANSLATIONS } from "./vikunja-todo-card-translations.js?v=0.38.4";
 
 const CARD_TYPE = "vikunja-todo-card";
 const STORAGE_PREFIX = "vikunja-todo-card:selected:";
 const PREFERENCES_PREFIX = "vikunja-todo-card:preferences:";
 const VIEW_MODES = new Set(["compact", "table"]);
+const CARD_THEMES = new Set(["home_assistant", "custom", "dot_matrix_blue", "dot_matrix_green"]);
+const MIN_COLUMN_WIDTH = 32;
+const DEFAULT_CUSTOM_COLORS = {
+  primary: "#ffffff",
+  alternate: "#eef6fc",
+  text: "#1f2933",
+  accent: "#3f6fb6",
+};
+const THEME_APPEARANCE = {
+  dot_matrix_blue: {
+    primary: "#fffef8",
+    alternate: "#e7f3fb",
+    text: "#172b3a",
+    accent: "#315f86",
+  },
+  dot_matrix_green: {
+    primary: "#fffef8",
+    alternate: "#e8f4e5",
+    text: "#1d3024",
+    accent: "#3e704a",
+  },
+};
 const SORT_KEYS = new Set([
-  "position",
   "title",
   "project",
   "priority",
+  "bucket",
   "status",
   "due",
   "assignees",
@@ -20,17 +42,17 @@ const DEFAULT_TABLE_COLUMNS = [
   "title",
   "project",
   "priority",
-  "status",
+  "bucket",
   "due",
   "assignees",
   "categories",
   "progress",
 ];
 const DEFAULT_COLUMN_WIDTHS = {
-  position: 90,
   title: 340,
   project: 140,
   priority: 100,
+  bucket: 140,
   status: 110,
   due: 140,
   assignees: 160,
@@ -60,15 +82,23 @@ class VikunjaTodoCard extends HTMLElement {
     this._openComments = new Set();
     this._openTimers = new Set();
     this._contextMenu = undefined;
+    this._columnMenu = undefined;
     this._search = "";
     this._myTasksOnly = false;
     this._viewMode = "compact";
+    this._sortRules = [];
     this._sortKey = "priority";
     this._sortDirection = "desc";
     this._visibleTableColumns = [...DEFAULT_TABLE_COLUMNS];
     this._columnWidths = {};
+    this._columnAliases = {};
     this._titleLineLimit = 3;
     this._descriptionLineLimit = 3;
+    this._showCompleted = true;
+    this._cardTheme = "home_assistant";
+    this._alternatingRows = false;
+    this._applyThemeToCompact = false;
+    this._customColors = { ...DEFAULT_CUSTOM_COLORS };
     this._viewOptionsOpen = false;
     this._dataReceivedAt = Date.now();
     this._timerTicker = undefined;
@@ -106,6 +136,31 @@ class VikunjaTodoCard extends HTMLElement {
     return 8;
   }
 
+  get _sortKey() {
+    return this._sortRules[0]?.key ?? null;
+  }
+
+  set _sortKey(value) {
+    if (value === null || value === undefined || value === "") {
+      this._sortRules = [];
+      return;
+    }
+    const direction = this._sortRules[0]?.direction ?? "asc";
+    this._sortRules = [
+      { key: String(value), direction },
+      ...this._sortRules.slice(1).filter((rule) => rule.key !== String(value)),
+    ];
+  }
+
+  get _sortDirection() {
+    return this._sortRules[0]?.direction ?? "asc";
+  }
+
+  set _sortDirection(value) {
+    if (!this._sortRules.length) return;
+    this._sortRules[0] = { ...this._sortRules[0], direction: value === "desc" ? "desc" : "asc" };
+  }
+
   setConfig(config) {
     if (!config || typeof config !== "object")
       throw new Error("Invalid Vikunja Task Hub card configuration");
@@ -119,6 +174,18 @@ class VikunjaTodoCard extends HTMLElement {
       (!config.table_column_widths || typeof config.table_column_widths !== "object")
     )
       throw new Error("table_column_widths must be an object");
+    if (
+      config.table_column_aliases !== undefined &&
+      (!config.table_column_aliases ||
+        typeof config.table_column_aliases !== "object" ||
+        Array.isArray(config.table_column_aliases))
+    )
+      throw new Error("table_column_aliases must be an object");
+    for (const [column, alias] of Object.entries(config.table_column_aliases ?? {})) {
+      if (!SORT_KEYS.has(column)) throw new Error(`Unsupported table column alias: ${column}`);
+      if (typeof alias !== "string" || alias.trim().length > 40)
+        throw new Error(`Alias for ${column} must be text no longer than 40 characters`);
+    }
     for (const [name, value] of [
       ["table_title_lines", config.table_title_lines],
       ["table_description_lines", config.table_description_lines],
@@ -135,28 +202,74 @@ class VikunjaTodoCard extends HTMLElement {
     const configuredDirection = String(config.table_sort_direction ?? "desc");
     if (!["asc", "desc"].includes(configuredDirection))
       throw new Error("table_sort_direction must be asc or desc");
+    const configuredTheme = String(config.theme ?? "home_assistant");
+    if (!CARD_THEMES.has(configuredTheme))
+      throw new Error("theme must be home_assistant, custom, dot_matrix_blue, or dot_matrix_green");
+    if (config.alternating_rows !== undefined && typeof config.alternating_rows !== "boolean")
+      throw new Error("alternating_rows must be true or false");
+    if (
+      config.apply_theme_to_compact !== undefined &&
+      typeof config.apply_theme_to_compact !== "boolean"
+    )
+      throw new Error("apply_theme_to_compact must be true or false");
+    const configuredColors = {
+      primary: config.primary_row_color ?? DEFAULT_CUSTOM_COLORS.primary,
+      alternate: config.alternate_row_color ?? DEFAULT_CUSTOM_COLORS.alternate,
+      text: config.text_color ?? DEFAULT_CUSTOM_COLORS.text,
+      accent: config.accent_color ?? DEFAULT_CUSTOM_COLORS.accent,
+    };
+    for (const [name, value] of Object.entries(configuredColors)) {
+      if (!/^#[0-9a-f]{6}$/i.test(String(value))) throw new Error(`${name} must be a six-digit hex color`);
+    }
     this._config = { ...config };
     const preferences = config.show_view_toggle === false ? {} : this._readPreferences();
     this._viewMode = VIEW_MODES.has(preferences.view_mode)
       ? preferences.view_mode
       : configuredView;
-    this._sortKey =
-      preferences.sort_key === null
-        ? null
-        : SORT_KEYS.has(preferences.sort_key)
-          ? preferences.sort_key
-          : configuredSort;
-    this._sortDirection = ["asc", "desc"].includes(preferences.sort_direction)
-      ? preferences.sort_direction
-      : configuredDirection;
+    if (Array.isArray(preferences.sort_rules)) {
+      this._sortRules = preferences.sort_rules
+        .filter(
+          (rule) =>
+            rule &&
+            SORT_KEYS.has(String(rule.key)) &&
+            ["asc", "desc"].includes(rule.direction),
+        )
+        .map((rule) => ({ key: String(rule.key), direction: rule.direction }))
+        .filter((rule, index, rules) => rules.findIndex((item) => item.key === rule.key) === index);
+    } else {
+      const preferredSort =
+        preferences.sort_key === null
+          ? null
+          : SORT_KEYS.has(preferences.sort_key)
+            ? preferences.sort_key
+            : configuredSort;
+      this._sortRules = preferredSort
+        ? [{
+            key: preferredSort,
+            direction: ["asc", "desc"].includes(preferences.sort_direction)
+              ? preferences.sort_direction
+              : configuredDirection,
+          }]
+        : [];
+    }
     const preferredColumns = Array.isArray(preferences.table_columns)
       ? preferences.table_columns
       : config.table_columns ?? DEFAULT_TABLE_COLUMNS;
+    const migratedColumns = preferredColumns.map((column) =>
+      Array.isArray(preferences.table_columns) &&
+      String(column) === "status" &&
+      !preferredColumns.map(String).includes("bucket")
+        ? "bucket"
+        : String(column),
+    );
     this._visibleTableColumns = [
-      ...new Set(preferredColumns.map(String).filter((column) => SORT_KEYS.has(column))),
+      ...new Set(migratedColumns.filter((column) => SORT_KEYS.has(column))),
     ];
     if (!this._visibleTableColumns.includes("title"))
       this._visibleTableColumns.unshift("title");
+    this._sortRules = this._sortRules.filter((rule) =>
+      this._visibleTableColumns.includes(rule.key),
+    );
     const preferredWidths =
       preferences.column_widths && typeof preferences.column_widths === "object"
         ? preferences.column_widths
@@ -164,7 +277,16 @@ class VikunjaTodoCard extends HTMLElement {
     this._columnWidths = Object.fromEntries(
       Object.entries(preferredWidths)
         .filter(([column, width]) => SORT_KEYS.has(column) && Number.isFinite(Number(width)))
-        .map(([column, width]) => [column, Math.max(80, Math.min(600, Math.round(Number(width))))]),
+        .map(([column, width]) => [column, Math.max(MIN_COLUMN_WIDTH, Math.min(600, Math.round(Number(width))))]),
+    );
+    const preferredAliases =
+      preferences.column_aliases && typeof preferences.column_aliases === "object"
+        ? preferences.column_aliases
+        : config.table_column_aliases ?? {};
+    this._columnAliases = Object.fromEntries(
+      Object.entries(preferredAliases)
+        .filter(([column, alias]) => SORT_KEYS.has(column) && String(alias).trim())
+        .map(([column, alias]) => [column, String(alias).trim().slice(0, 40)]),
     );
     this._titleLineLimit = Math.max(
       1,
@@ -178,6 +300,26 @@ class VikunjaTodoCard extends HTMLElement {
           Number(preferences.description_line_limit ?? config.table_description_lines ?? 3),
         ),
       ),
+    );
+    this._showCompleted = preferences.show_completed ?? config.table_show_completed ?? true;
+    this._cardTheme = CARD_THEMES.has(preferences.card_theme)
+      ? preferences.card_theme
+      : configuredTheme;
+    this._alternatingRows =
+      preferences.alternating_rows ??
+      config.alternating_rows ??
+      configuredTheme.startsWith("dot_matrix_");
+    this._applyThemeToCompact =
+      preferences.apply_theme_to_compact ?? config.apply_theme_to_compact ?? false;
+    const preferredColorSet =
+      preferences.custom_colors && typeof preferences.custom_colors === "object"
+        ? preferences.custom_colors
+        : THEME_APPEARANCE[configuredTheme] ?? configuredColors;
+    this._customColors = Object.fromEntries(
+      Object.entries(configuredColors).map(([name, value]) => {
+        const preferred = preferredColorSet[name];
+        return [name, /^#[0-9a-f]{6}$/i.test(String(preferred)) ? preferred : String(value)];
+      }),
     );
     this._render();
   }
@@ -313,15 +455,58 @@ class VikunjaTodoCard extends HTMLElement {
           view_mode: this._viewMode,
           sort_key: this._sortKey,
           sort_direction: this._sortDirection,
+          sort_rules: this._sortRules,
           table_columns: this._visibleTableColumns,
           column_widths: this._columnWidths,
+          column_aliases: this._columnAliases,
           title_line_limit: this._titleLineLimit,
           description_line_limit: this._descriptionLineLimit,
+          show_completed: this._showCompleted,
+          card_theme: this._cardTheme,
+          alternating_rows: this._alternatingRows,
+          apply_theme_to_compact: this._applyThemeToCompact,
+          custom_colors: this._customColors,
         }),
       );
     } catch (_error) {
       /* optional */
     }
+  }
+
+  _appearance() {
+    if (this._cardTheme === "home_assistant") {
+      return {
+        primary: "var(--card-background-color)",
+        alternate: "var(--secondary-background-color)",
+        text: undefined,
+        accent: undefined,
+        reportPaper: false,
+      };
+    }
+    const colors = this._cardTheme === "custom"
+      ? this._customColors
+      : THEME_APPEARANCE[this._cardTheme];
+    return { ...colors, reportPaper: this._cardTheme.startsWith("dot_matrix_") };
+  }
+
+  _themeIsActive() {
+    return this._viewMode === "table" || this._applyThemeToCompact;
+  }
+
+  _appearanceStyle() {
+    const appearance = this._appearance();
+    const declarations = [
+      `--vth-row-primary:${appearance.primary}`,
+      `--vth-row-alternate:${appearance.alternate}`,
+    ];
+    if (appearance.text) {
+      declarations.push(`--primary-text-color:${appearance.text}`);
+      declarations.push(`--secondary-text-color:color-mix(in srgb,${appearance.text} 72%,transparent)`);
+      declarations.push(`--card-background-color:${appearance.primary}`);
+      declarations.push(`--secondary-background-color:${appearance.alternate}`);
+    }
+    if (appearance.accent) declarations.push(`--primary-color:${appearance.accent}`);
+    return declarations.join(";");
   }
 
   _tableColumns() {
@@ -375,10 +560,18 @@ class VikunjaTodoCard extends HTMLElement {
 
   _projectTasks() {
     if (!this._data || !this._selectedProject) return [];
-    if (this._selectedProject === "all") return this._data.tasks;
-    return this._data.tasks.filter(
+    const tasks = this._selectedProject === "all" ? this._data.tasks : this._data.tasks.filter(
       (task) => String(task.project_id) === String(this._selectedProject),
     );
+    return [...new Map(tasks.map((task) => [Number(task.id), task])).values()];
+  }
+
+  _bucketView(task) {
+    return this._data?.project_bucket_views?.[String(task.project_id)];
+  }
+
+  _bucketTitle(task) {
+    return this._bucketView(task) ? task.bucket_title || this._t("noBucket") : "";
   }
 
   _filteredTasks(searchValue = this._search, myTasksOnly = this._myTasksOnly) {
@@ -435,18 +628,23 @@ class VikunjaTodoCard extends HTMLElement {
   }
 
   _compareTasks(left, right) {
-    const direction = this._sortDirection === "asc" ? 1 : -1;
-    if (!this._sortKey)
+    if (!this._sortRules.length)
       return Number(Boolean(left.done)) - Number(Boolean(right.done));
-    if (this._sortKey !== "status") {
+    if (this._sortRules[0].key !== "status") {
       const stateDifference = Number(Boolean(left.done)) - Number(Boolean(right.done));
       if (stateDifference) return stateDifference;
     }
+    for (const rule of this._sortRules) {
+      const comparison = this._compareTaskRule(left, right, rule);
+      if (comparison) return comparison;
+    }
+    return Number(right.id ?? 0) - Number(left.id ?? 0);
+  }
+
+  _compareTaskRule(left, right, rule) {
+    const direction = rule.direction === "asc" ? 1 : -1;
     let comparison = 0;
-    switch (this._sortKey) {
-      case "position":
-        comparison = this._compareNullableNumbers(left.position, right.position, direction);
-        break;
+    switch (rule.key) {
       case "title":
         comparison = direction * this._compareText(left.title, right.title);
         break;
@@ -455,6 +653,9 @@ class VikunjaTodoCard extends HTMLElement {
         break;
       case "priority":
         comparison = direction * (Number(left.priority ?? 0) - Number(right.priority ?? 0));
+        break;
+      case "bucket":
+        comparison = direction * this._compareText(this._bucketTitle(left), this._bucketTitle(right));
         break;
       case "status":
         comparison = direction * (Number(Boolean(left.done)) - Number(Boolean(right.done)));
@@ -496,13 +697,17 @@ class VikunjaTodoCard extends HTMLElement {
       default:
         break;
     }
-    return comparison || Number(right.id ?? 0) - Number(left.id ?? 0);
+    return comparison;
   }
 
-  _toggleTableSort(key, direction) {
-    const alreadyActive = this._sortKey === key && this._sortDirection === direction;
-    this._sortKey = alreadyActive ? null : key;
-    if (!alreadyActive) this._sortDirection = direction;
+  _cycleTableSort(key) {
+    if (this._sortRules.length !== 1 || this._sortRules[0].key !== key) {
+      this._sortRules = [{ key, direction: "asc" }];
+    } else if (this._sortRules[0].direction === "asc") {
+      this._sortRules = [{ key, direction: "desc" }];
+    } else {
+      this._sortRules = [];
+    }
   }
 
   _compactSort(left, right) {
@@ -512,13 +717,13 @@ class VikunjaTodoCard extends HTMLElement {
     return priorityDifference || rightCreated - leftCreated || Number(right.id) - Number(left.id);
   }
 
-  _columnLabel(column) {
+  _defaultColumnLabel(column) {
     return this._t(
       {
-        position: "position",
         title: "title",
         project: "project",
         priority: "priority",
+        bucket: "bucket",
         status: "status",
         due: "dueDate",
         assignees: "assignees",
@@ -529,11 +734,20 @@ class VikunjaTodoCard extends HTMLElement {
     );
   }
 
+  _columnLabel(column) {
+    return this._columnAliases[column] || this._defaultColumnLabel(column);
+  }
+
   _sortHeader(column) {
-    const active = this._sortKey === column;
+    const sortIndex = this._sortRules.findIndex((rule) => rule.key === column);
+    const sortRule = sortIndex >= 0 ? this._sortRules[sortIndex] : undefined;
+    const active = Boolean(sortRule);
     const width = this._columnWidths[column] ?? DEFAULT_COLUMN_WIDTHS[column];
     const widthStyle = `style="width:${width}px;min-width:${width}px;max-width:${width}px"`;
-    return `<th scope="col" class="table-${column}" data-table-column="${column}" draggable="true" ${widthStyle} aria-sort="${active ? (this._sortDirection === "asc" ? "ascending" : "descending") : "none"}"><div class="table-header-content"><span>${this._escape(this._columnLabel(column))}</span><span class="table-sort-controls"><button type="button" class="${active && this._sortDirection === "asc" ? "active" : ""}" data-sort-key="${column}" data-sort-direction="asc" aria-label="${this._escape(this._columnLabel(column))}: ${this._t("sortAscending")}">▲</button><button type="button" class="${active && this._sortDirection === "desc" ? "active" : ""}" data-sort-key="${column}" data-sort-direction="desc" aria-label="${this._escape(this._columnLabel(column))}: ${this._t("sortDescending")}">▼</button></span></div><span class="column-resize-handle" data-resize-column="${column}" role="separator" aria-orientation="vertical" aria-label="${this._t("resizeColumn")}: ${this._escape(this._columnLabel(column))}"></span></th>`;
+    const directionLabel = active
+      ? this._t(sortRule.direction === "asc" ? "sortAscending" : "sortDescending")
+      : this._t("noSorting");
+    return `<th scope="col" class="table-${column}" data-table-column="${column}" draggable="true" ${widthStyle} aria-sort="${active ? (sortRule.direction === "asc" ? "ascending" : "descending") : "none"}"><div class="table-header-content"><button type="button" class="table-sort-toggle ${active ? "active" : ""}" data-sort-cycle="${column}" title="${this._escape(this._columnLabel(column))}: ${directionLabel}" aria-label="${this._escape(this._columnLabel(column))}: ${directionLabel}"><span class="table-header-label">${this._escape(this._columnLabel(column))}</span>${active ? `<span class="table-sort-indicator" aria-hidden="true">${sortRule.direction === "asc" ? "▲" : "▼"}${this._sortRules.length > 1 ? `<sup>${sortIndex + 1}</sup>` : ""}</span>` : ""}</button></div><span class="column-resize-handle" data-resize-column="${column}" role="separator" aria-orientation="vertical" aria-label="${this._t("resizeColumn")}: ${this._escape(this._columnLabel(column))}"></span></th>`;
   }
 
   _taskTable(tasks, reserveColorSpace) {
@@ -543,6 +757,13 @@ class VikunjaTodoCard extends HTMLElement {
       .join("")}</tr></thead>${tasks
       .map((task) => this._tableTaskRow(task, columns, reserveColorSpace))
       .join("")}</table></div><div class="empty table-empty" ${tasks.length ? "hidden" : ""}>${this._t("noTasks")}</div>`;
+  }
+
+  _tableSections(active, completed, reserveColorSpace) {
+    const completedSection = this._showCompleted
+      ? `<details class="completed table-completed"><summary>${this._t("completed")} (<span class="completed-table-count">${completed.length}</span>)</summary>${this._taskTable(completed, reserveColorSpace)}</details>`
+      : "";
+    return `<section class="table-section"><h3>${this._t("active")} (<span class="active-table-count">${active.length}</span>)</h3>${this._taskTable(active, reserveColorSpace)}</section>${completedSection}`;
   }
 
   _counts() {
@@ -628,7 +849,7 @@ class VikunjaTodoCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host { display:block; min-width:0; width:100%; grid-column:1 / -1; }
-        ha-card { overflow:hidden; width:100%; }
+        ha-card { overflow:hidden; width:100%; background:var(--vth-row-primary,var(--card-background-color)); color:var(--primary-text-color); }
         .toolbar { display:grid; grid-template-columns:repeat(2,minmax(260px,480px)); gap:12px; padding:14px; align-items:end; justify-content:start; }
         select,input,button { font:inherit; color:var(--primary-text-color); }
         select,input { min-width:0; border:1px solid var(--divider-color); border-radius:8px; background:var(--card-background-color); padding:9px 10px; }
@@ -664,24 +885,25 @@ class VikunjaTodoCard extends HTMLElement {
         .task-actions { margin-top:0; }
         .list { border-top:1px solid var(--divider-color); }
         .table-scroll { width:100%; overflow-x:auto; border-top:1px solid var(--divider-color); }
-        .task-table { width:100%; min-width:760px; border-collapse:collapse; }
+        .task-table { width:100%; border-collapse:collapse; table-layout:fixed; }
         .task-table th { position:relative; padding:0; border-bottom:1px solid var(--divider-color); background:var(--secondary-background-color); text-align:left; }
         .task-table th.dragging { opacity:.45; }
         .task-table th.drag-target { box-shadow:inset 3px 0 0 var(--primary-color); }
-        .table-header-content { display:flex; gap:6px; align-items:center; justify-content:space-between; padding:7px 10px 7px 12px; color:var(--secondary-text-color); font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; }
-        .table-sort-controls { display:inline-flex; gap:0; }
-        .table-sort-controls button { width:18px; height:22px; padding:0; background:transparent; color:var(--secondary-text-color); font-size:9px; }
-        .table-sort-controls button.active { color:var(--primary-color); background:var(--card-background-color); }
+        .table-header-content { display:flex; gap:1px; min-width:0; align-items:center; justify-content:space-between; padding:7px 2px; color:var(--secondary-text-color); font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; overflow:hidden; }
+        .table-sort-toggle { display:flex; width:100%; min-width:0; height:22px; align-items:center; justify-content:space-between; gap:3px; padding:0; background:transparent; color:var(--secondary-text-color); text-align:left; }
+        .table-sort-toggle.active { color:var(--primary-color); }
+        .table-header-label { min-width:0; overflow:hidden; text-overflow:clip; }
+        .table-sort-indicator { flex:0 0 auto; font-size:8px; }
         .column-resize-handle { position:absolute; z-index:2; top:0; right:-4px; width:9px; height:100%; cursor:col-resize; touch-action:none; }
         .column-resize-handle:hover { background:color-mix(in srgb,var(--primary-color) 30%,transparent); }
-        .task-table td { padding:10px 12px; border-bottom:1px solid var(--divider-color); vertical-align:top; }
+        .task-table th,.task-table td { box-sizing:border-box; }
+        .task-table td { padding:10px 6px; border-bottom:1px solid var(--divider-color); vertical-align:top; }
         .task-table .row { display:table-row; padding:0; }
         .task-table tr:last-child td { border-bottom:0; }
-        .task-table .table-position { width:76px; }
-        .task-table .table-title { width:340px; min-width:240px; }
+        .task-table th,.task-table td { overflow:hidden; }
         .task-table .table-priority,.task-table .table-status,.task-table .table-progress { width:110px; }
         .task-table .table-due,.task-table .table-created { min-width:150px; }
-        .table-title-content { display:flex; align-items:flex-start; gap:9px; min-width:200px; max-width:100%; }
+        .table-title-content { display:flex; align-items:flex-start; gap:9px; min-width:0; max-width:100%; overflow:hidden; }
         .table-title-main { flex:1 1 auto; min-width:0; max-width:100%; }
         .task-table .summary { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:${this._titleLineLimit}; white-space:normal; overflow:hidden; overflow-wrap:anywhere; }
         .task-table .description { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:${this._descriptionLineLimit}; white-space:normal; overflow-wrap:anywhere; }
@@ -691,12 +913,18 @@ class VikunjaTodoCard extends HTMLElement {
         .priority-badge[data-priority="4"],.priority-badge[data-priority="5"] { color:var(--error-color); }
         .status-badge.active { color:var(--primary-color); background:color-mix(in srgb,var(--primary-color) 12%,transparent); }
         .status-badge.completed { color:var(--success-color,#2e7d32); background:color-mix(in srgb,var(--success-color,#2e7d32) 12%,transparent); }
-        .table-assignees { color:var(--secondary-text-color); font-style:italic; white-space:nowrap; }
-        .table-position-cell,.table-progress-cell,.table-project-cell,.table-due-cell,.table-created-cell { white-space:nowrap; }
+        .table-assignees { color:inherit; font-style:normal; white-space:normal; overflow-wrap:anywhere; }
+        .table-assignees.empty { color:var(--secondary-text-color); font-style:italic; }
+        .table-progress-cell,.table-project-cell,.table-due-cell,.table-created-cell { white-space:nowrap; }
         .table-categories-cell .task-labels { flex-wrap:wrap; overflow:visible; margin-top:0; }
         .table-progress-cell .progress-wrap { min-width:86px; }
         .task-shell { border-bottom:1px solid var(--divider-color); }
         .task-shell[hidden] { display:none; }
+        .list > .task-shell > .row,.task-table > .task-shell > .row { background:var(--vth-row-primary,transparent); }
+        .theme-alternating .list > .task-shell:nth-child(even) > .row,.theme-alternating .task-table > .task-shell:nth-of-type(even) > .row { background:var(--vth-row-alternate,var(--secondary-background-color)); }
+        .theme-report-paper { font-family:"Courier New",Courier,monospace; }
+        .theme-report-paper .list > .task-shell > .row,.theme-report-paper .task-table > .task-shell > .row { border-bottom:1px dashed color-mix(in srgb,var(--primary-color) 30%,transparent); }
+        .theme-report-paper .task-table th { font-family:"Courier New",Courier,monospace; letter-spacing:.02em; }
         .row { display:grid; grid-template-columns:auto minmax(0,1fr) minmax(54px,90px); gap:9px; align-items:start; padding:11px 14px; }
         .task-shell.reserve-color .row { grid-template-columns:auto auto minmax(0,1fr) minmax(54px,90px); }
         .row[hidden] { display:none; }
@@ -744,6 +972,10 @@ class VikunjaTodoCard extends HTMLElement {
         .comment-text { margin-top:2px; color:var(--primary-text-color); white-space:pre-wrap; }
         .context-menu { position:fixed; z-index:30; display:grid; min-width:180px; max-width:calc(100vw - 16px); max-height:calc(100vh - 16px); overflow-y:auto; padding:6px; border:1px solid var(--divider-color); border-radius:10px; background:var(--card-background-color); box-shadow:var(--ha-card-box-shadow); }
         .context-menu button { text-align:left; background:transparent; }
+        .column-context-menu { min-width:240px; gap:4px; }
+        .column-sort-status { padding:7px 9px 3px; color:var(--secondary-text-color); font-size:11px; font-weight:700; text-transform:uppercase; }
+        .column-alias-field { display:grid; gap:6px; padding:7px; font-size:12px; font-weight:600; }
+        .column-alias-input { box-sizing:border-box; width:100%; }
         .context-assignees > summary { cursor:pointer; list-style:none; padding:9px 11px; }
         .context-assignees > summary::-webkit-details-marker { display:none; }
         .context-assignee-options { display:grid; padding-left:12px; border-left:2px solid var(--divider-color); }
@@ -761,6 +993,8 @@ class VikunjaTodoCard extends HTMLElement {
         .empty,.status { padding:18px 14px; color:var(--secondary-text-color); }
         .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
         details.completed > summary { cursor:pointer; padding:12px 14px; font-weight:500; }
+        .table-section > h3 { margin:0; padding:12px 14px 8px; font-size:14px; }
+        .table-completed > .table-scroll { margin-top:0; }
         .busy { opacity:.55; pointer-events:none; }
         .modal-backdrop { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.52); display:grid; place-items:center; padding:20px; }
         .dialog { width:min(620px,100%); max-height:90vh; overflow:auto; background:var(--card-background-color); color:var(--primary-text-color); border-radius:14px; box-shadow:var(--ha-card-box-shadow); padding:18px; }
@@ -798,6 +1032,18 @@ class VikunjaTodoCard extends HTMLElement {
         .view-column-width { width:82px; box-sizing:border-box; padding:6px; }
         .column-order-help { color:var(--secondary-text-color); font-size:12px; }
         .view-options-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+        .sort-stack { display:grid; gap:5px; margin-top:12px; }
+        .sort-stack > span { color:var(--secondary-text-color); font-size:12px; font-weight:700; }
+        .sort-stack-item { display:grid; grid-template-columns:minmax(0,1fr) repeat(4,32px); gap:4px; align-items:center; }
+        .sort-stack-item button { width:32px; height:30px; padding:0; }
+        .clear-sorting { justify-self:start; padding:5px 8px; font-size:12px; }
+        .appearance-options { margin-top:16px; padding-top:14px; border-top:1px solid var(--divider-color); }
+        .appearance-options h3 { margin:0 0 8px; font-size:15px; }
+        .appearance-options .reset-view-options,.clear-all-aliases { margin-top:10px; }
+        .clear-all-aliases { padding:5px 8px; font-size:12px; }
+        .appearance-colors { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+        .appearance-color { display:grid; grid-template-columns:minmax(0,1fr) 48px; gap:8px; align-items:center; }
+        .appearance-color input { width:48px; height:36px; padding:2px; box-sizing:border-box; cursor:pointer; }
         .card-links { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:16px; }
         .card-link { display:block; padding:9px 13px; border-radius:8px; background:var(--secondary-background-color); color:var(--primary-text-color); text-align:center; text-decoration:none; }
         .delete-impact { padding:12px; border-radius:8px; background:var(--secondary-background-color); }
@@ -806,7 +1052,11 @@ class VikunjaTodoCard extends HTMLElement {
         @media (max-width:900px) { .bulk-actions { grid-template-columns:1fr; } }
         @media (max-width:700px) { .toolbar { grid-template-columns:1fr; } .selector-group { grid-template-columns:auto minmax(0,1fr); } .refresh { margin-left:0; } }
       </style>
-      <ha-card class="${this._loading ? "busy" : ""}">
+      <ha-card class="${this._loading ? "busy" : ""} ${
+        this._themeIsActive() && this._alternatingRows ? "theme-alternating" : ""
+      } ${
+        this._themeIsActive() && this._appearance().reportPaper ? "theme-report-paper" : ""
+      }" style="${this._themeIsActive() ? this._appearanceStyle() : ""}">
         <div class="toolbar">
           <div class="selector-group">
             <div class="selector-actions">
@@ -878,12 +1128,12 @@ class VikunjaTodoCard extends HTMLElement {
           !data
             ? `<div class="status">${this._t("loading")}</div>`
             : `
-          ${this._viewMode === "table" ? this._taskTable(displayed, reserveColorSpace) : `<div class="list active-list">${active.map((task) => this._taskRow(task, reserveColorSpace)).join("")}<div class="empty active-empty" ${active.length ? "hidden" : ""}>${this._t("noActive")}</div></div><details class="completed"><summary>${this._t("completed")} (<span class="completed-count">${completed.length}</span>)</summary><div class="list">${completed.map((task) => this._taskRow(task, reserveColorSpace)).join("")}<div class="empty completed-empty" ${completed.length ? "hidden" : ""}>${this._t("noCompleted")}</div></div></details>`}
+          ${this._viewMode === "table" ? this._tableSections(active, completed, reserveColorSpace) : `<div class="list active-list">${active.map((task) => this._taskRow(task, reserveColorSpace)).join("")}<div class="empty active-empty" ${active.length ? "hidden" : ""}>${this._t("noActive")}</div></div><details class="completed"><summary>${this._t("completed")} (<span class="completed-count">${completed.length}</span>)</summary><div class="list">${completed.map((task) => this._taskRow(task, reserveColorSpace)).join("")}<div class="empty completed-empty" ${completed.length ? "hidden" : ""}>${this._t("noCompleted")}</div></div></details>`}
         `
         }
         <div class="card-links">
           ${this._vikunjaUrl ? `<a class="card-link" href="${this._escape(this._projectVikunjaUrl())}" target="_blank" rel="noopener noreferrer">${this._t("openVikunja")}</a>` : ""}
-          <a class="card-link" href="/vikunja-static/tips.html?lang=${encodeURIComponent(this._language())}&v=0.36.8" target="_blank" rel="noopener noreferrer">${this._t("tips")}</a>
+          <a class="card-link" href="/vikunja-static/tips.html?lang=${encodeURIComponent(this._language())}&v=0.38.4" target="_blank" rel="noopener noreferrer">${this._t("tips")}</a>
           <a class="card-link" href="https://github.com/tednv/vikunja-task-hub" target="_blank" rel="noopener noreferrer">${this._t("aboutRepository")}</a>
           <a class="card-link" href="https://buymeacoffee.com/tednv" target="_blank" rel="noopener noreferrer">${this._t("support")}</a>
         </div>
@@ -891,6 +1141,7 @@ class VikunjaTodoCard extends HTMLElement {
       ${this._editingTask ? this._taskDialog(this._editingTask) : ""}
       ${this._deleteRequest ? this._deleteDialog(this._deleteRequest) : ""}
       ${this._contextMenu ? this._contextMenuTemplate() : ""}
+      ${this._columnMenu ? this._columnMenuTemplate() : ""}
       ${this._viewOptionsOpen ? this._viewOptionsTemplate() : ""}`;
     this._wireEvents();
   }
@@ -944,7 +1195,6 @@ class VikunjaTodoCard extends HTMLElement {
     const assigneeNames = this._taskAssigneeNames(task);
     const progress = Math.max(0, Math.min(100, Math.round(Number(task.percent_done) * 100)));
     const cells = {
-      position: `<td class="table-position-cell">${task.position ?? "—"}</td>`,
       title: `<td class="table-title-cell"><div class="table-title-content">
         ${task.hex_color ? `<span class="task-color" style="background:#${this._escape(task.hex_color)}" title="${this._t("color")}"></span>` : reserveColorSpace ? `<span class="task-color-spacer" aria-hidden="true"></span>` : ""}
         <input type="checkbox" aria-label="${this._t("selectTask")}" ${this._selectedTasks.has(Number(task.id)) ? "checked" : ""}>
@@ -952,9 +1202,10 @@ class VikunjaTodoCard extends HTMLElement {
       </div></td>`,
       project: `<td class="table-project-cell">${this._escape(this._projectTitle(task) || "—")}</td>`,
       priority: `<td class="table-priority-cell"><span class="priority-badge" data-priority="${priority}" title="${this._t("priority")}: ${priority}">P${priority}</span></td>`,
+      bucket: `<td class="table-bucket-cell" title="${this._escape(this._bucketTitle(task))}">${this._escape(this._bucketTitle(task) || "—")}</td>`,
       status: `<td class="table-status-cell"><span class="status-badge ${task.done ? "completed" : "active"}">${this._t(task.done ? "completedLabel" : "active")}</span></td>`,
       due: `<td class="table-due-cell">${task.due ? this._escape(this._formatDate(task.due)) : "—"}</td>`,
-      assignees: `<td class="table-assignees-cell">${assigneeNames.length ? `<span class="assignee-list table-assignees">(${this._escape(assigneeNames.join(", "))})</span>` : `<span class="table-assignees">${this._t("unassigned")}</span>`}</td>`,
+      assignees: `<td class="table-assignees-cell">${assigneeNames.length ? `<span class="table-assignees">${this._escape(assigneeNames.join(", "))}</span>` : `<span class="table-assignees empty">${this._t("unassigned")}</span>`}</td>`,
       categories: `<td class="table-categories-cell">${labels.length ? `<div class="task-labels">${labels.map((label) => `<span class="task-label" style="${label.color ? `border-left:3px solid #${this._escape(label.color)}` : ""}">${this._escape(label.title)}</span>`).join("")}</div>` : "—"}</td>`,
       progress: `<td class="table-progress-cell"><div class="progress-wrap" title="${this._t("progress")}: ${progress}%"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><div class="progress-text">${progress}%</div></div></td>`,
       created: `<td class="table-created-cell">${task.created ? this._escape(this._formatDateTime(task.created)) : "—"}</td>`,
@@ -971,7 +1222,7 @@ class VikunjaTodoCard extends HTMLElement {
     const columnChoices = orderedColumns
       .map(
         (column, index) =>
-          `<div class="view-column-option"><label><input type="checkbox" data-view-column="${column}" ${selected.has(column) ? "checked" : ""} ${column === "title" ? "disabled" : ""}> <span>${this._escape(this._columnLabel(column))}</span></label>${selected.has(column) ? `<input type="number" class="view-column-width" data-column-width="${column}" min="80" max="600" step="10" value="${this._columnWidths[column] ?? DEFAULT_COLUMN_WIDTHS[column]}" aria-label="${this._t("width")}: ${this._escape(this._columnLabel(column))}"><button type="button" data-move-column="up" data-column="${column}" aria-label="${this._t("moveUp")}: ${this._escape(this._columnLabel(column))}" ${index === 0 ? "disabled" : ""}>↑</button><button type="button" data-move-column="down" data-column="${column}" aria-label="${this._t("moveDown")}: ${this._escape(this._columnLabel(column))}" ${index === this._visibleTableColumns.length - 1 ? "disabled" : ""}>↓</button>` : "<span></span><span></span><span></span>"}</div>`,
+          `<div class="view-column-option"><label><input type="checkbox" data-view-column="${column}" ${selected.has(column) ? "checked" : ""} ${column === "title" ? "disabled" : ""}> <span>${this._escape(this._columnLabel(column))}</span></label>${selected.has(column) ? `<input type="number" class="view-column-width" data-column-width="${column}" min="${MIN_COLUMN_WIDTH}" max="600" step="1" value="${this._columnWidths[column] ?? DEFAULT_COLUMN_WIDTHS[column]}" aria-label="${this._t("width")}: ${this._escape(this._columnLabel(column))}"><button type="button" data-move-column="up" data-column="${column}" aria-label="${this._t("moveUp")}: ${this._escape(this._columnLabel(column))}" ${index === 0 ? "disabled" : ""}>↑</button><button type="button" data-move-column="down" data-column="${column}" aria-label="${this._t("moveDown")}: ${this._escape(this._columnLabel(column))}" ${index === this._visibleTableColumns.length - 1 ? "disabled" : ""}>↓</button>` : "<span></span><span></span><span></span>"}</div>`,
       )
       .join("");
     const sortChoices =
@@ -982,6 +1233,12 @@ class VikunjaTodoCard extends HTMLElement {
             `<option value="${column}" ${this._sortKey === column ? "selected" : ""}>${this._escape(this._columnLabel(column))}</option>`,
         )
         .join("");
+    const sortStack = this._sortRules
+      .map(
+        (rule, index) =>
+          `<div class="sort-stack-item" data-sort-rule="${rule.key}"><span>${index + 1}. ${this._escape(this._columnLabel(rule.key))} ${rule.direction === "asc" ? "▲" : "▼"}</span><button type="button" data-move-sort="up" aria-label="${this._t("moveUp")}" ${index === 0 ? "disabled" : ""}>↑</button><button type="button" data-move-sort="down" aria-label="${this._t("moveDown")}" ${index === this._sortRules.length - 1 ? "disabled" : ""}>↓</button><button type="button" data-toggle-sort-direction aria-label="${this._t(rule.direction === "asc" ? "sortDescending" : "sortAscending")}">${rule.direction === "asc" ? "▼" : "▲"}</button><button type="button" data-remove-sort aria-label="${this._t("removeFromSort")}">×</button></div>`,
+      )
+      .join("");
     return `<div class="modal-backdrop view-options-backdrop" role="dialog" aria-label="${this._t("viewOptions")}">
       <div class="dialog view-options-dialog">
         <h2>${this._t("viewOptions")}</h2>
@@ -994,10 +1251,30 @@ class VikunjaTodoCard extends HTMLElement {
                 <label class="field">${this._t("direction")}<select class="view-options-direction" ${this._sortKey === null ? "disabled" : ""}><option value="asc" ${this._sortDirection === "asc" ? "selected" : ""}>${this._t("sortAscending")}</option><option value="desc" ${this._sortDirection === "desc" ? "selected" : ""}>${this._t("sortDescending")}</option></select></label>
                 <label class="field">${this._t("titleLines")}<input type="number" class="title-line-limit" min="1" max="10" value="${this._titleLineLimit}"></label>
                 <label class="field">${this._t("descriptionLines")}<input type="number" class="description-line-limit" min="1" max="10" value="${this._descriptionLineLimit}"></label>
-              </div>
-              <button type="button" class="reset-view-options">${this._t("resetDefaults")}</button>`
+                <label class="check-field"><input type="checkbox" class="show-completed" ${this._showCompleted ? "checked" : ""}> ${this._t("showCompleted")}</label>
+              </div>`
             : ""
         }
+        ${this._viewMode === "table" && this._sortRules.length ? `<div class="sort-stack"><span>${this._t("sortOrder")}</span>${sortStack}<button type="button" class="clear-sorting">${this._t("clearSorting")}</button></div>` : ""}
+        <section class="appearance-options">
+          <h3>${this._t("appearance")}</h3>
+          <label class="field">${this._t("theme")}<select class="card-theme-select">
+            <option value="home_assistant" ${this._cardTheme === "home_assistant" ? "selected" : ""}>${this._t("homeAssistantTheme")}</option>
+            <option value="custom" ${this._cardTheme === "custom" ? "selected" : ""}>${this._t("customTheme")}</option>
+            <option value="dot_matrix_blue" ${this._cardTheme === "dot_matrix_blue" ? "selected" : ""}>${this._t("dotMatrixBlue")}</option>
+            <option value="dot_matrix_green" ${this._cardTheme === "dot_matrix_green" ? "selected" : ""}>${this._t("dotMatrixGreen")}</option>
+          </select></label>
+          <label class="check-field"><input type="checkbox" class="apply-theme-to-compact" ${this._applyThemeToCompact ? "checked" : ""}> ${this._t("applyThemeToCompact")}</label>
+          <label class="check-field"><input type="checkbox" class="alternating-rows" ${this._alternatingRows ? "checked" : ""}> ${this._t("alternatingRows")}</label>
+          <div class="appearance-colors">
+            <label class="appearance-color"><span>${this._t("primaryRowColor")}</span><input type="color" data-theme-color="primary" value="${this._customColors.primary}"></label>
+            <label class="appearance-color"><span>${this._t("alternateRowColor")}</span><input type="color" data-theme-color="alternate" value="${this._customColors.alternate}"></label>
+            <label class="appearance-color"><span>${this._t("textColor")}</span><input type="color" data-theme-color="text" value="${this._customColors.text}"></label>
+            <label class="appearance-color"><span>${this._t("accentColor")}</span><input type="color" data-theme-color="accent" value="${this._customColors.accent}"></label>
+          </div>
+          <button type="button" class="reset-view-options">${this._t("resetDefaults")}</button>
+          ${Object.keys(this._columnAliases).length ? `<button type="button" class="clear-all-aliases">${this._t("clearAllAliases")}</button>` : ""}
+        </section>
         <div class="dialog-actions"><button type="button" class="close-view-options">${this._t("close")}</button></div>
       </div>
     </div>`;
@@ -1014,24 +1291,43 @@ class VikunjaTodoCard extends HTMLElement {
       (user) => !assignedIds.has(Number(user.id)),
     );
     if (this._contextMenu.mode === "unassign") {
-      return `<div class="context-menu" style="left:${this._contextMenu.x}px;top:${this._contextMenu.y}px" data-task="${task.id}">
+      return `<div class="context-menu" style="left:${this._contextMenu.x}px;top:${this._contextMenu.y}px;visibility:hidden" data-task="${task.id}">
         ${(task.assignees ?? []).map((user) => `<button type="button" data-unassign-id="${user.id}">${this._t("unassign")} ${this._escape(this._userName(user))}</button>`).join("")}
       </div>`;
     }
     const currentUserId = Number(this._data?.current_user?.id);
     const currentUser = availableAssignees.find((user) => Number(user.id) === currentUserId);
     const otherAssignees = availableAssignees.filter((user) => Number(user.id) !== currentUserId);
-    return `<div class="context-menu" style="left:${this._contextMenu.x}px;top:${this._contextMenu.y}px" data-task="${task.id}">
+    const bucketView = this._bucketView(task);
+    const movableBuckets = bucketView?.configuration_mode === "filter"
+      ? []
+      : (bucketView?.buckets ?? []).filter((bucket) => Number(bucket.id) !== Number(task.bucket_id));
+    return `<div class="context-menu" style="left:${this._contextMenu.x}px;top:${this._contextMenu.y}px;visibility:hidden" data-task="${task.id}">
       <button type="button" data-context="complete">${task.done ? this._t("markActive") : this._t("markComplete")}</button>
       ${timer ? "" : `<button type="button" data-context="time-add">${this._t("addTimer")}</button>`}
       ${Number(task.priority) < 5 ? `<button type="button" data-context="priority-up">${this._t("priority")} +</button>` : ""}
       ${Number(task.priority) > 0 ? `<button type="button" data-context="priority-down">${this._t("priority")} −</button><button type="button" data-context="priority-clear">${this._t("priority")} 0</button>` : ""}
       ${currentUser ? `<button type="button" data-assignee-id="${currentUser.id}">${this._t("assignToMe")}</button>` : ""}
       ${otherAssignees.length ? `<details class="context-assignees"><summary>${this._t("assignTo")} ›</summary><div class="context-assignee-options"><input type="search" class="context-assignee-search" aria-label="${this._t("searchAssignees")}" placeholder="${this._t("searchAssignees")}">${otherAssignees.map((user) => `<button type="button" data-assignee-id="${user.id}" data-user-search="${this._escape(this._userName(user).toLocaleLowerCase())}">${this._escape(this._userName(user))}</button>`).join("")}</div></details>` : ""}
+      ${movableBuckets.length ? `<details class="context-assignees context-buckets"><summary>${this._t("moveToBucket")} ›</summary><div class="context-assignee-options">${movableBuckets.map((bucket) => `<button type="button" data-bucket-id="${bucket.id}" data-bucket-view-id="${bucketView.id}">${this._escape(bucket.title)}</button>`).join("")}</div></details>` : ""}
       <label class="context-color">${this._t("color")}<input class="context-color-input" type="color" value="#${this._escape(task.hex_color || "1976d2")}"></label>
       <button type="button" data-context="copy">${this._t("copyAsText")}</button>
       <button type="button" data-context="share">${this._t("share")}</button>
       <button type="button" class="danger" data-context="delete">${this._t("deleteTask")}</button>
+    </div>`;
+  }
+
+  _columnMenuTemplate() {
+    const column = this._columnMenu?.column;
+    if (!SORT_KEYS.has(column)) return "";
+    const alias = this._columnAliases[column] ?? "";
+    const sortIndex = this._sortRules.findIndex((rule) => rule.key === column);
+    const sortRule = sortIndex >= 0 ? this._sortRules[sortIndex] : undefined;
+    return `<div class="context-menu column-context-menu" style="left:${this._columnMenu.x}px;top:${this._columnMenu.y}px;visibility:hidden" data-column="${column}">
+      ${sortRule ? `<span class="column-sort-status">${this._t("sortPriority")} ${sortIndex + 1}</span>${sortIndex > 0 ? `<button type="button" class="move-column-sort-up">↑ ${this._t("moveUp")}</button>` : ""}${sortIndex < this._sortRules.length - 1 ? `<button type="button" class="move-column-sort-down">↓ ${this._t("moveDown")}</button>` : ""}<button type="button" class="toggle-column-sort">${this._t(sortRule.direction === "asc" ? "sortDescending" : "sortAscending")}</button><button type="button" class="remove-column-sort">${this._t("removeFromSort")}</button>` : `<button type="button" class="add-column-sort">${this._t("addToSort")}</button>`}
+      <label class="column-alias-field"><span>${this._t("columnAlias")}: ${this._escape(this._defaultColumnLabel(column))}</span><input type="text" class="column-alias-input" maxlength="40" value="${this._escape(alias)}" placeholder="${this._escape(this._defaultColumnLabel(column))}"></label>
+      <button type="button" class="set-column-alias">${this._t("setAlias")}</button>
+      ${alias ? `<button type="button" class="clear-column-alias">${this._t("clearAlias")}</button>` : ""}
     </div>`;
   }
 
@@ -1048,6 +1344,23 @@ class VikunjaTodoCard extends HTMLElement {
     const y = Math.max(margin, Math.min(preferredY, window.innerHeight - rect.height - margin));
     menu.style.left = `${x}px`;
     menu.style.top = `${y}px`;
+    menu.style.visibility = "visible";
+  }
+
+  _positionColumnMenu() {
+    const menu = this.shadowRoot.querySelector(".column-context-menu");
+    if (!menu || !this._columnMenu) return;
+    const margin = 8;
+    const rect = menu.getBoundingClientRect();
+    const x = Math.max(margin, Math.min(this._columnMenu.x, window.innerWidth - rect.width - margin));
+    const below = window.innerHeight - this._columnMenu.y - margin;
+    const preferredY = rect.height <= below
+      ? this._columnMenu.y
+      : this._columnMenu.anchorTop - rect.height;
+    const y = Math.max(margin, Math.min(preferredY, window.innerHeight - rect.height - margin));
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.style.visibility = "visible";
   }
 
   _taskDialog(task) {
@@ -1061,6 +1374,14 @@ class VikunjaTodoCard extends HTMLElement {
           `<label><input type="checkbox" name="labels" value="${label.id}" ${task.labels.map(String).includes(String(label.id)) ? "checked" : ""}> <span>${this._escape(label.title)}</span></label>`,
       )
       .join("");
+    const bucketView = this._bucketView(task);
+    const bucketEditor = bucketView
+      ? bucketView.configuration_mode === "filter"
+        ? `<div class="field"><span>${this._t("bucket")}</span><span>${this._escape(this._bucketTitle(task))} · ${this._t("filterBucketsReadOnly")}</span></div>`
+        : (bucketView.buckets ?? []).length
+          ? `<label class="field">${this._t("bucket")}<select name="bucket_id" data-bucket-view-id="${bucketView.id}">${bucketView.buckets.map((bucket) => `<option value="${bucket.id}" ${Number(bucket.id) === Number(task.bucket_id) ? "selected" : ""}>${this._escape(bucket.title)}</option>`).join("")}</select></label>`
+          : `<div class="field"><span>${this._t("bucket")}</span><span>${this._t("noBucket")}</span></div>`
+      : "";
     const eligibleAssignees = this._eligibleAssignees(task);
     const assignedIds = new Set((task.assignees ?? []).map((user) => String(user.id)));
     const assigneePicker = eligibleAssignees.length
@@ -1103,6 +1424,7 @@ class VikunjaTodoCard extends HTMLElement {
           <div class="description-preview" hidden><ha-markdown></ha-markdown></div>
         </div>
         <label class="field">${this._t("dueDate")}<input name="due" type="date" value="${this._escape(due)}"></label>
+        ${bucketEditor}
         <div class="field recurrence-grid">
           <label>${this._t("priority")}<select name="priority">${[0, 1, 2, 3, 4, 5].map((value) => `<option value="${value}" ${Number(task.priority) === value ? "selected" : ""}>${value}</option>`).join("")}</select></label>
           <label>${this._t("progress")} <output class="progress-output">${progress}%</output><input name="progress" type="range" min="0" max="100" step="10" value="${progress}"></label>
@@ -1271,12 +1593,9 @@ class VikunjaTodoCard extends HTMLElement {
           (item) => item.dataset.viewColumn,
         );
         this._visibleTableColumns = [...new Set(["title", ...columns])];
-        if (this._sortKey && !this._visibleTableColumns.includes(this._sortKey)) {
-          this._sortKey = this._visibleTableColumns.includes("priority")
-            ? "priority"
-            : this._visibleTableColumns[0];
-          this._sortDirection = this._sortKey === "priority" ? "desc" : "asc";
-        }
+        this._sortRules = this._sortRules.filter((rule) =>
+          this._visibleTableColumns.includes(rule.key),
+        );
         this._rememberPreferences();
         this._render();
       });
@@ -1298,18 +1617,60 @@ class VikunjaTodoCard extends HTMLElement {
         const column = input.dataset.columnWidth;
         const width = Number(input.value);
         if (input.value === "" || !Number.isFinite(width)) delete this._columnWidths[column];
-        else this._columnWidths[column] = Math.max(80, Math.min(600, Math.round(width)));
+        else this._columnWidths[column] = Math.max(MIN_COLUMN_WIDTH, Math.min(600, Math.round(width)));
         this._rememberPreferences();
         this._render();
       });
     });
     root.querySelector(".view-options-sort")?.addEventListener("change", (event) => {
-      this._sortKey = event.target.value || null;
+      const key = event.target.value;
+      if (!key) this._sortRules = [];
+      else {
+        const existing = this._sortRules.find((rule) => rule.key === key);
+        this._sortRules = [
+          existing ?? { key, direction: key === "priority" ? "desc" : "asc" },
+          ...this._sortRules.filter((rule) => rule.key !== key),
+        ];
+      }
       this._rememberPreferences();
       this._render();
     });
     root.querySelector(".view-options-direction")?.addEventListener("change", (event) => {
       this._sortDirection = event.target.value;
+      this._rememberPreferences();
+      this._render();
+    });
+    root.querySelectorAll("[data-sort-rule]").forEach((row) => {
+      const key = row.dataset.sortRule;
+      row.querySelectorAll("[data-move-sort]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = this._sortRules.findIndex((rule) => rule.key === key);
+          const target = button.dataset.moveSort === "up" ? index - 1 : index + 1;
+          if (index < 0 || target < 0 || target >= this._sortRules.length) return;
+          const rules = [...this._sortRules];
+          [rules[index], rules[target]] = [rules[target], rules[index]];
+          this._sortRules = rules;
+          this._rememberPreferences();
+          this._render();
+        });
+      });
+      row.querySelector("[data-toggle-sort-direction]")?.addEventListener("click", () => {
+        this._sortRules = this._sortRules.map((rule) =>
+          rule.key === key
+            ? { ...rule, direction: rule.direction === "asc" ? "desc" : "asc" }
+            : rule,
+        );
+        this._rememberPreferences();
+        this._render();
+      });
+      row.querySelector("[data-remove-sort]")?.addEventListener("click", () => {
+        this._sortRules = this._sortRules.filter((rule) => rule.key !== key);
+        this._rememberPreferences();
+        this._render();
+      });
+    });
+    root.querySelector(".clear-sorting")?.addEventListener("click", () => {
+      this._sortRules = [];
       this._rememberPreferences();
       this._render();
     });
@@ -1326,13 +1687,55 @@ class VikunjaTodoCard extends HTMLElement {
       this._rememberPreferences();
       this._render();
     });
+    root.querySelector(".show-completed")?.addEventListener("change", (event) => {
+      this._showCompleted = event.target.checked;
+      this._rememberPreferences();
+      this._render();
+    });
+    root.querySelector(".card-theme-select")?.addEventListener("change", (event) => {
+      this._cardTheme = event.target.value;
+      if (THEME_APPEARANCE[this._cardTheme]) {
+        this._customColors = { ...THEME_APPEARANCE[this._cardTheme] };
+        this._alternatingRows = true;
+      }
+      this._rememberPreferences();
+      this._render();
+    });
+    root.querySelector(".alternating-rows")?.addEventListener("change", (event) => {
+      this._alternatingRows = event.target.checked;
+      this._rememberPreferences();
+      this._render();
+    });
+    root.querySelector(".apply-theme-to-compact")?.addEventListener("change", (event) => {
+      this._applyThemeToCompact = event.target.checked;
+      this._rememberPreferences();
+      this._render();
+    });
+    root.querySelectorAll("[data-theme-color]").forEach((input) => {
+      input.addEventListener("change", () => {
+        this._customColors[input.dataset.themeColor] = input.value;
+        this._cardTheme = "custom";
+        this._rememberPreferences();
+        this._render();
+      });
+    });
+    root.querySelector(".clear-all-aliases")?.addEventListener("click", () => {
+      this._columnAliases = {};
+      this._rememberPreferences();
+      this._render();
+    });
     root.querySelector(".reset-view-options")?.addEventListener("click", () => {
       this._visibleTableColumns = [...DEFAULT_TABLE_COLUMNS];
       this._columnWidths = {};
+      this._columnAliases = {};
       this._titleLineLimit = 3;
       this._descriptionLineLimit = 3;
-      this._sortKey = "priority";
-      this._sortDirection = "desc";
+      this._showCompleted = true;
+      this._sortRules = [{ key: "priority", direction: "desc" }];
+      this._cardTheme = "home_assistant";
+      this._alternatingRows = false;
+      this._applyThemeToCompact = false;
+      this._customColors = { ...DEFAULT_CUSTOM_COLORS };
       this._rememberPreferences();
       this._render();
     });
@@ -1346,16 +1749,41 @@ class VikunjaTodoCard extends HTMLElement {
         this._render();
       }
     });
-    root.querySelectorAll("[data-sort-key]").forEach((button) => {
+    root.querySelectorAll("[data-sort-cycle]").forEach((button) => {
       button.addEventListener("click", () => {
-        this._toggleTableSort(button.dataset.sortKey, button.dataset.sortDirection);
+        this._cycleTableSort(button.dataset.sortCycle);
         this._rememberPreferences();
         this._render();
       });
     });
     root.querySelectorAll("th[data-table-column]").forEach((header) => {
+      let columnPressTimer;
+      const clearColumnPress = () => clearTimeout(columnPressTimer);
+      const openColumnMenu = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const anchor = header.getBoundingClientRect();
+        this._contextMenu = undefined;
+        this._columnMenu = {
+          column: header.dataset.tableColumn,
+          x: anchor.left,
+          y: anchor.bottom,
+          anchorTop: anchor.top,
+        };
+        this._render();
+        this._positionColumnMenu();
+      };
+      header.addEventListener("contextmenu", openColumnMenu);
+      header.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0 || event.target.closest(".column-resize-handle")) return;
+        columnPressTimer = setTimeout(() => openColumnMenu(event), 550);
+      });
+      header.addEventListener("pointerup", clearColumnPress);
+      header.addEventListener("pointercancel", clearColumnPress);
+      header.addEventListener("pointermove", clearColumnPress);
       header.addEventListener("dragstart", (event) => {
-        if (event.target.closest("button,.column-resize-handle")) {
+        clearColumnPress();
+        if (event.target.closest(".column-resize-handle")) {
           event.preventDefault();
           return;
         }
@@ -1411,7 +1839,7 @@ class VikunjaTodoCard extends HTMLElement {
             });
         };
         const move = (moveEvent) => {
-          const width = Math.max(80, Math.min(600, Math.round(startWidth + moveEvent.clientX - startX)));
+          const width = Math.max(MIN_COLUMN_WIDTH, Math.min(600, Math.round(startWidth + moveEvent.clientX - startX)));
           this._columnWidths[column] = width;
           updateWidth(width);
         };
@@ -1659,6 +2087,23 @@ class VikunjaTodoCard extends HTMLElement {
         });
       });
     });
+    root.querySelectorAll(".context-menu [data-bucket-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const task = this._data?.tasks.find(
+          (item) => Number(item.id) === Number(this._contextMenu?.taskId),
+        );
+        const bucket_id = Number(button.dataset.bucketId);
+        const bucket_view_id = Number(button.dataset.bucketViewId);
+        this._contextMenu = undefined;
+        if (!task || !Number.isFinite(bucket_id) || !Number.isFinite(bucket_view_id))
+          return this._render();
+        void this._action("task_update", {
+          task_id: Number(task.id),
+          bucket_id,
+          bucket_view_id,
+        });
+      });
+    });
     root.querySelector(".context-assignee-search")?.addEventListener("input", (event) => {
       const search = event.target.value.trim().toLocaleLowerCase();
       root.querySelectorAll(".context-assignee-options [data-user-search]").forEach((button) => {
@@ -1673,9 +2118,85 @@ class VikunjaTodoCard extends HTMLElement {
         void this._action("task_update", { task_id, hex_color });
       else this._render();
     });
+    root.querySelector(".add-column-sort")?.addEventListener("click", () => {
+      const key = this._columnMenu?.column;
+      if (SORT_KEYS.has(key) && !this._sortRules.some((rule) => rule.key === key))
+        this._sortRules = [...this._sortRules, { key, direction: "asc" }];
+      this._columnMenu = undefined;
+      this._rememberPreferences();
+      this._render();
+    });
+    root.querySelector(".toggle-column-sort")?.addEventListener("click", () => {
+      const key = this._columnMenu?.column;
+      this._sortRules = this._sortRules.map((rule) =>
+        rule.key === key
+          ? { ...rule, direction: rule.direction === "asc" ? "desc" : "asc" }
+          : rule,
+      );
+      this._columnMenu = undefined;
+      this._rememberPreferences();
+      this._render();
+    });
+    const moveColumnSort = (offset) => {
+      const key = this._columnMenu?.column;
+      const index = this._sortRules.findIndex((rule) => rule.key === key);
+      const target = index + offset;
+      if (index >= 0 && target >= 0 && target < this._sortRules.length) {
+        const rules = [...this._sortRules];
+        [rules[index], rules[target]] = [rules[target], rules[index]];
+        this._sortRules = rules;
+      }
+      this._columnMenu = undefined;
+      this._rememberPreferences();
+      this._render();
+    };
+    root.querySelector(".move-column-sort-up")?.addEventListener("click", () =>
+      moveColumnSort(-1),
+    );
+    root.querySelector(".move-column-sort-down")?.addEventListener("click", () =>
+      moveColumnSort(1),
+    );
+    root.querySelector(".remove-column-sort")?.addEventListener("click", () => {
+      const key = this._columnMenu?.column;
+      this._sortRules = this._sortRules.filter((rule) => rule.key !== key);
+      this._columnMenu = undefined;
+      this._rememberPreferences();
+      this._render();
+    });
+    const saveColumnAlias = () => {
+      const column = this._columnMenu?.column;
+      if (!SORT_KEYS.has(column)) return;
+      const alias = String(root.querySelector(".column-alias-input")?.value ?? "").trim();
+      if (alias) this._columnAliases[column] = alias.slice(0, 40);
+      else delete this._columnAliases[column];
+      this._columnMenu = undefined;
+      this._rememberPreferences();
+      this._render();
+    };
+    root.querySelector(".set-column-alias")?.addEventListener("click", saveColumnAlias);
+    root.querySelector(".column-alias-input")?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        saveColumnAlias();
+      } else if (event.key === "Escape") {
+        this._columnMenu = undefined;
+        this._render();
+      }
+    });
+    root.querySelector(".clear-column-alias")?.addEventListener("click", () => {
+      const column = this._columnMenu?.column;
+      if (SORT_KEYS.has(column)) delete this._columnAliases[column];
+      this._columnMenu = undefined;
+      this._rememberPreferences();
+      this._render();
+    });
     root.querySelector("ha-card")?.addEventListener("click", (event) => {
       if (this._contextMenu && !event.composedPath().some((item) => item?.classList?.contains("context-menu"))) {
         this._contextMenu = undefined;
+        this._render();
+      }
+      if (this._columnMenu && !event.composedPath().some((item) => item?.classList?.contains("column-context-menu"))) {
+        this._columnMenu = undefined;
         this._render();
       }
     });
@@ -1768,6 +2289,7 @@ class VikunjaTodoCard extends HTMLElement {
       ).map((input) => Number(input.value));
       const task_id = Number(this._editingTask.id);
       const recurrence = this._recurrenceFromForm(form);
+      const bucketSelect = editor.querySelector('[name="bucket_id"]');
       this._editingTask = undefined;
       void this._action("task_update", {
         task_id,
@@ -1784,6 +2306,12 @@ class VikunjaTodoCard extends HTMLElement {
           : "",
         label_ids,
         assignee_ids,
+        ...(bucketSelect
+          ? {
+              bucket_id: Number(bucketSelect.value),
+              bucket_view_id: Number(bucketSelect.dataset.bucketViewId),
+            }
+          : {}),
       });
     });
     editor?.querySelector(".cancel-editor")?.addEventListener("click", () => {
@@ -1993,8 +2521,14 @@ class VikunjaTodoCard extends HTMLElement {
     if (completedEmpty) completedEmpty.hidden = completedCount > 0;
     const completedCountNode = root.querySelector(".completed-count");
     if (completedCountNode) completedCountNode.textContent = String(completedCount);
-    const tableEmpty = root.querySelector(".table-empty");
-    if (tableEmpty) tableEmpty.hidden = activeCount + completedCount > 0;
+    const activeTableEmpty = root.querySelector(".table-section .table-empty");
+    if (activeTableEmpty) activeTableEmpty.hidden = activeCount > 0;
+    const completedTableEmpty = root.querySelector(".table-completed .table-empty");
+    if (completedTableEmpty) completedTableEmpty.hidden = completedCount > 0;
+    const activeTableCount = root.querySelector(".active-table-count");
+    if (activeTableCount) activeTableCount.textContent = String(activeCount);
+    const completedTableCount = root.querySelector(".completed-table-count");
+    if (completedTableCount) completedTableCount.textContent = String(completedCount);
     const visibleIds = this._filteredTasks().map((task) => Number(task.id));
     const selectVisible = root.querySelector(".select-visible");
     if (selectVisible) {

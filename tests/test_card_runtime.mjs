@@ -35,6 +35,17 @@ card._data = {
       { id: 22, name: "Second Person", username: "second" },
     ],
   },
+  project_bucket_views: {
+    "12": {
+      id: 30,
+      title: "Board",
+      configuration_mode: "manual",
+      buckets: [
+        { id: 40, title: "To do" },
+        { id: 41, title: "In progress" },
+      ],
+    },
+  },
   labels: [{ id: 3, title: "Planning", color: "336699" }],
   tasks: [
     {
@@ -47,7 +58,8 @@ card._data = {
       repeat_after: 0,
       repeat_mode: 0,
       priority: 3,
-      position: 42.5,
+      bucket_id: 41,
+      bucket_title: "In progress",
       percent_done: 0.4,
       hex_color: "224466",
       comment_count: 2,
@@ -60,6 +72,9 @@ card._data = {
 };
 
 assert.equal(card._projectVikunjaUrl(), "https://example.com/vikunja/projects/12");
+card._data.tasks.push({ ...card._data.tasks[0] });
+assert.equal(card._projectTasks().length, 1);
+card._data.tasks.pop();
 
 const row = card._taskRow(card._data.tasks[0]);
 assert.match(row, /comment-toggle/);
@@ -80,14 +95,23 @@ card.setConfig({ view_mode: "table" });
 assert.match(card.shadowRoot.innerHTML, /class="task-table"/);
 assert.match(card.shadowRoot.innerHTML, /aria-label="View options: Table"[^>]*>▦<\/button>/);
 assert.match(card.shadowRoot.innerHTML, /data-priority="3"[^>]*>P3<\/span>/);
-assert.match(card.shadowRoot.innerHTML, /class="status-badge active">Active<\/span>/);
-assert.match(card.shadowRoot.innerHTML, /\(Example Person\)/);
+assert.match(card.shadowRoot.innerHTML, /class="table-bucket-cell"[^>]*>In progress<\/td>/);
+assert.match(card.shadowRoot.innerHTML, /<h3>Active \(<span class="active-table-count">1<\/span>\)<\/h3>/);
+assert.match(card.shadowRoot.innerHTML, /class="completed table-completed"/);
+card._showCompleted = false;
+card._render();
+assert.doesNotMatch(card.shadowRoot.innerHTML, /class="completed table-completed"/);
+card._showCompleted = true;
+card._render();
+assert.match(card.shadowRoot.innerHTML, /class="table-assignees">Example Person<\/span>/);
+assert.doesNotMatch(card.shadowRoot.innerHTML, /class="assignee-list table-assignees">\(Example Person\)/);
 assert.match(card.shadowRoot.innerHTML, /Planning/);
-assert.match(card.shadowRoot.innerHTML, /data-sort-key="due"/);
-assert.match(card.shadowRoot.innerHTML, /data-sort-key="progress"/);
-assert.match(card.shadowRoot.innerHTML, /data-sort-key="priority" data-sort-direction="asc"/);
-assert.match(card.shadowRoot.innerHTML, /data-sort-key="priority" data-sort-direction="desc"/);
-assert.doesNotMatch(card.shadowRoot.innerHTML, /data-sort-key="position"/);
+assert.match(card.shadowRoot.innerHTML, /data-sort-cycle="due"/);
+assert.match(card.shadowRoot.innerHTML, /data-sort-cycle="progress"/);
+assert.match(card.shadowRoot.innerHTML, /data-sort-cycle="priority"/);
+assert.match(card.shadowRoot.innerHTML, /class="table-sort-indicator"[^>]*>▼<\/span>/);
+assert.equal((card.shadowRoot.innerHTML.match(/class="table-sort-indicator"/g) ?? []).length, 2);
+assert.doesNotMatch(card.shadowRoot.innerHTML, /data-sort-cycle="position"|table-position/);
 card._viewOptionsOpen = true;
 card._render();
 assert.match(card.shadowRoot.innerHTML, /class="dialog view-options-dialog"/);
@@ -96,34 +120,106 @@ assert.match(card.shadowRoot.innerHTML, /class="view-options-sort"/);
 assert.match(card.shadowRoot.innerHTML, /class="view-options-direction"/);
 assert.match(card.shadowRoot.innerHTML, /class="title-line-limit"/);
 assert.match(card.shadowRoot.innerHTML, /class="description-line-limit"/);
+assert.match(card.shadowRoot.innerHTML, /class="show-completed" checked/);
 assert.match(card.shadowRoot.innerHTML, /value=""[^>]*>No sorting<\/option>/);
 assert.match(card.shadowRoot.innerHTML, /data-column-width="title"[^>]*value="340"/);
 assert.match(card.shadowRoot.innerHTML, /class="reset-view-options"/);
+assert.match(card.shadowRoot.innerHTML, /class="sort-stack"/);
+assert.match(card.shadowRoot.innerHTML, /class="clear-sorting"/);
 assert.match(card.shadowRoot.innerHTML, /data-column-width="priority"/);
+assert.match(card.shadowRoot.innerHTML, /data-column-width="priority" min="32"/);
 assert.match(card.shadowRoot.innerHTML, /data-move-column="up" data-column="priority"/);
 assert.match(card.shadowRoot.innerHTML, /data-move-column="down" data-column="priority"/);
 assert.match(card.shadowRoot.innerHTML, /Top to bottom appears left to right/);
 assert.match(card.shadowRoot.innerHTML, /data-table-column="priority" draggable="true"/);
 assert.match(card.shadowRoot.innerHTML, /data-resize-column="priority"/);
+assert.match(card.shadowRoot.innerHTML, /data-view-column="bucket" checked/);
+assert.match(card.shadowRoot.innerHTML, /class="card-theme-select"/);
+assert.match(card.shadowRoot.innerHTML, /value="dot_matrix_blue"/);
+assert.match(card.shadowRoot.innerHTML, /value="dot_matrix_green"/);
+assert.match(card.shadowRoot.innerHTML, /class="alternating-rows"/);
+assert.match(card.shadowRoot.innerHTML, /class="apply-theme-to-compact"/);
+assert.match(card.shadowRoot.innerHTML, /data-theme-color="primary"/);
+assert.doesNotMatch(card.shadowRoot.innerHTML, /class="clear-all-aliases"/);
 card._viewOptionsOpen = false;
-card.setConfig({ view_mode: "table", table_columns: ["position", "title"] });
-assert.match(card.shadowRoot.innerHTML, /data-sort-key="position"/);
-assert.match(card.shadowRoot.innerHTML, /42\.5/);
+assert.throws(
+  () => card.setConfig({ view_mode: "table", table_columns: ["position", "title"] }),
+  /Unsupported table column: position/,
+);
+assert.throws(() => card.setConfig({ theme: "unknown" }), /theme must be/);
+assert.throws(
+  () => card.setConfig({ apply_theme_to_compact: "yes" }),
+  /apply_theme_to_compact must be true or false/,
+);
+assert.throws(() => card.setConfig({ primary_row_color: "blue" }), /primary must be/);
+card.setConfig({
+  view_mode: "table",
+  theme: "custom",
+  alternating_rows: true,
+  primary_row_color: "#ffffff",
+  alternate_row_color: "#e7f3fb",
+  text_color: "#172b3a",
+  accent_color: "#315f86",
+  table_column_aliases: { priority: "Pri" },
+});
+assert.equal(card._columnLabel("priority"), "Pri");
+assert.match(card._appearanceStyle(), /--vth-row-alternate:#e7f3fb/);
+assert.match(card.shadowRoot.innerHTML, /class="[^"\n]*theme-alternating/);
+assert.match(card.shadowRoot.innerHTML, />Pri<\/span>/);
+card._viewOptionsOpen = true;
+card._render();
+assert.match(card.shadowRoot.innerHTML, /class="clear-all-aliases"/);
+card._viewOptionsOpen = false;
+card._columnMenu = { column: "priority", x: 10, y: 10 };
+assert.match(card._columnMenuTemplate(), /value="Pri"/);
+assert.match(card._columnMenuTemplate(), /visibility:hidden/);
+assert.match(card._columnMenuTemplate(), /class="clear-column-alias"/);
+assert.match(card._columnMenuTemplate(), /class="remove-column-sort"/);
+card._columnMenu = undefined;
 card.setConfig({ view_mode: "table" });
 card._sortKey = "priority";
 card._sortDirection = "desc";
-const lowerPriority = { ...card._data.tasks[0], id: 8, priority: 1, position: 1 };
+const lowerPriority = { ...card._data.tasks[0], id: 8, priority: 1 };
 assert.ok(card._compareTasks(card._data.tasks[0], lowerPriority) < 0);
 const completedTask = { ...card._data.tasks[0], id: 9, done: true, priority: 5 };
 assert.ok(card._compareTasks(card._data.tasks[0], completedTask) < 0);
-card._toggleTableSort("priority", "desc");
+card._cycleTableSort("title");
+assert.equal(card._sortKey, "title");
+assert.equal(card._sortDirection, "asc");
+card._cycleTableSort("title");
+assert.equal(card._sortDirection, "desc");
+card._cycleTableSort("title");
 assert.equal(card._sortKey, null);
 assert.equal(card._compareTasks(card._data.tasks[0], lowerPriority), 0);
 assert.ok(card._compareTasks(card._data.tasks[0], completedTask) < 0);
-card._toggleTableSort("title", "asc");
-assert.equal(card._sortKey, "title");
-assert.equal(card._sortDirection, "asc");
+card._sortRules = [
+  { key: "priority", direction: "desc" },
+  { key: "title", direction: "asc" },
+];
+const samePriorityLaterTitle = { ...card._data.tasks[0], id: 10, title: "Zebra task" };
+assert.ok(card._compareTasks(card._data.tasks[0], samePriorityLaterTitle) < 0);
+card._render();
+assert.match(card.shadowRoot.innerHTML, /class="table-sort-indicator"[^>]*>▼<sup>1<\/sup><\/span>/);
+assert.match(card.shadowRoot.innerHTML, /class="table-sort-indicator"[^>]*>▲<sup>2<\/sup><\/span>/);
+card._columnMenu = { column: "priority", x: 10, y: 10 };
+assert.match(card._columnMenuTemplate(), /class="move-column-sort-down"/);
+assert.doesNotMatch(card._columnMenuTemplate(), /class="move-column-sort-up"/);
+card._columnMenu = { column: "title", x: 10, y: 10 };
+assert.match(card._columnMenuTemplate(), /class="move-column-sort-up"/);
+assert.doesNotMatch(card._columnMenuTemplate(), /class="move-column-sort-down"/);
+card._columnMenu = { column: "bucket", x: 10, y: 10 };
+assert.match(card._columnMenuTemplate(), /class="add-column-sort"/);
+card._columnMenu = undefined;
 card.setConfig({ view_mode: "compact" });
+card._cardTheme = "dot_matrix_blue";
+card._alternatingRows = true;
+card._render();
+assert.doesNotMatch(card.shadowRoot.innerHTML, /class="[^"\n]*theme-alternating/);
+assert.doesNotMatch(card.shadowRoot.innerHTML, /class="[^"\n]*theme-report-paper/);
+assert.doesNotMatch(card.shadowRoot.innerHTML, /--vth-row-primary:/);
+card.setConfig({ view_mode: "compact", theme: "dot_matrix_blue", apply_theme_to_compact: true });
+assert.match(card.shadowRoot.innerHTML, /class="[^"\n]*theme-alternating/);
+assert.match(card.shadowRoot.innerHTML, /class="[^"\n]*theme-report-paper/);
 card._viewOptionsOpen = true;
 card._render();
 assert.doesNotMatch(card.shadowRoot.innerHTML, /data-view-column=/);
@@ -186,6 +282,7 @@ assert.match(openTimerRow, /data-timer-action="done">Stop<\/button>/);
 assert.match(openTimerRow, /data-timer-action="cancel"/);
 
 card._contextMenu = { taskId: 7, x: 10, y: 10 };
+assert.match(card._contextMenuTemplate(), /visibility:hidden/);
 assert.match(card._contextMenuTemplate(), /data-context="share"/);
 assert.match(card._contextMenuTemplate(), /data-context="priority-up"/);
 assert.match(card._contextMenuTemplate(), /data-context="priority-down"/);
@@ -193,6 +290,11 @@ assert.match(card._contextMenuTemplate(), /data-context="priority-clear"/);
 assert.match(card._contextMenuTemplate(), /class="context-color-input" type="color"/);
 assert.match(card._contextMenuTemplate(), /<summary>Assign to ›<\/summary>/);
 assert.match(card._contextMenuTemplate(), /context-assignee-search/);
+assert.match(card._contextMenuTemplate(), /<summary>Move to bucket ›<\/summary>/);
+assert.match(card._contextMenuTemplate(), /data-bucket-id="40" data-bucket-view-id="30">To do/);
+card._data.project_bucket_views["12"].configuration_mode = "filter";
+assert.doesNotMatch(card._contextMenuTemplate(), /data-bucket-id=/);
+card._data.project_bucket_views["12"].configuration_mode = "manual";
 assert.match(card._contextMenuTemplate(), /data-assignee-id="22"[^>]*>Second Person/);
 assert.doesNotMatch(card._contextMenuTemplate(), /data-assignee-id="21">Example Person/);
 assert.doesNotMatch(card._contextMenuTemplate(), /data-context="time-|timer-limit-input|timer-note-input/);
@@ -200,7 +302,7 @@ assert.doesNotMatch(card._contextMenuTemplate(), /data-context="time-|timer-limi
 card._contextMenu = undefined;
 card._render();
 assert.doesNotMatch(card.shadowRoot.innerHTML, /Select all \(0 selected\)/);
-assert.match(card.shadowRoot.innerHTML, /tips\.html\?lang=en&amp;v=0\.36\.8|tips\.html\?lang=en&v=0\.36\.8/);
+assert.match(card.shadowRoot.innerHTML, /tips\.html\?lang=en&amp;v=0\.38\.4|tips\.html\?lang=en&v=0\.38\.4/);
 card._selectedTasks.add(7);
 card._render();
 assert.match(card.shadowRoot.innerHTML, /Select all \(1 selected\)/);
@@ -242,6 +344,8 @@ assert.match(card.shadowRoot.innerHTML, /name="assignees" value="22"/);
 assert.match(card.shadowRoot.innerHTML, /class="assignee-search"/);
 assert.match(card.shadowRoot.innerHTML, /data-remove-assignee="21"/);
 assert.match(card.shadowRoot.innerHTML, /data-add-assignee="22"/);
+assert.match(card.shadowRoot.innerHTML, /name="bucket_id" data-bucket-view-id="30"/);
+assert.match(card.shadowRoot.innerHTML, /value="41" selected>In progress/);
 const uncoloredTask = { ...card._data.tasks[0], id: 8, hex_color: "", comment_count: 0 };
 card._openComments.add(8);
 const uncoloredRow = card._taskRow(uncoloredTask);
@@ -293,7 +397,8 @@ const cardSource = fs.readFileSync(
 );
 assert.match(cardSource, /-webkit-line-clamp:\$\{this\._descriptionLineLimit\}/);
 assert.match(cardSource, /-webkit-line-clamp:\$\{this\._titleLineLimit\}/);
-assert.match(cardSource, /\.task-table \.table-title[^}]*width:340px/);
+assert.match(cardSource, /const MIN_COLUMN_WIDTH = 32/);
+assert.doesNotMatch(cardSource, /\.task-table \.table-title[^}]*min-width/);
 assert.match(cardSource, /\.table-title-main[^}]*max-width:100%/);
 assert.match(tipsSource, /class="guide"/);
 for (const key of [

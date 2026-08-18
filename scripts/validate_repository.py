@@ -13,9 +13,33 @@ INTEGRATION = ROOT / "custom_components" / "vikunja"
 SETUP_TRANSLATIONS = INTEGRATION / "translations"
 CARD_TRANSLATIONS = INTEGRATION / "frontend" / "translations"
 EXPECTED_SETUP_LOCALES = {
-    "ar", "bn", "de", "el", "en", "es", "fa", "fr", "ga", "hi", "hu",
-    "id", "it", "ja", "ko", "nl", "pl", "pt", "ro", "ru", "sr", "th",
-    "tr", "uk", "ur", "vi", "zh-Hans",
+    "ar",
+    "bn",
+    "de",
+    "el",
+    "en",
+    "es",
+    "fa",
+    "fr",
+    "ga",
+    "hi",
+    "hu",
+    "id",
+    "it",
+    "ja",
+    "ko",
+    "nl",
+    "pl",
+    "pt",
+    "ro",
+    "ru",
+    "sr",
+    "th",
+    "tr",
+    "uk",
+    "ur",
+    "vi",
+    "zh-Hans",
 }
 EXPECTED_CARD_LOCALES = (EXPECTED_SETUP_LOCALES - {"zh-Hans"}) | {"zh"}
 JSON_FILES = (

@@ -92,7 +92,9 @@ Vikunja Task Hub follows the language selected in Home Assistant and falls back 
 - Add tasks without leaving the dashboard.
 - Search task titles as you type without interrupting keyboard focus.
 - Use the small button at the far right of Search to switch between the familiar compact list and a sortable multi-column table. Right-click or long-press it to choose, reorder, and size table columns or set the sort field and direction; those choices are remembered per card. On desktop, headings can also be dragged left or right to reorder them, and their right edges can be dragged to resize them. Each heading provides explicit ascending and descending controls.
-- Sort the table by position, title, project, priority, status, due date, assignees, categories, progress, or creation time, with completed tasks kept together unless sorting by status.
+- Sort active and completed table sections independently by title, project, priority, Kanban bucket, status, due date, assignees, categories, progress, or creation time.
+- Show assigned users as normal table-cell text while retaining the compact parenthesized presentation in Compact view.
+- Show each task's primary Kanban bucket, move tasks between manual buckets from task details or quick actions, and hide completed tasks from Table view when desired.
 - Toggle **My Tasks (N)** beside selection controls whenever the current project/category view contains tasks assigned to the authenticated user.
 - Sort higher-priority tasks first, then newest first within the same priority, and keep completed tasks in a separate collapsible section.
 - Open any task to edit its title, description, due date, labels, priority, progress, color, recurrence, and completion state.
@@ -246,7 +248,7 @@ table_columns:
   - title
   - project
   - priority
-  - status
+  - bucket
   - due
   - assignees
   - categories
@@ -256,13 +258,21 @@ table_sort_direction: desc
 table_column_widths:
   title: 340
   assignees: 180
+table_column_aliases:
+  priority: Pri
 table_title_lines: 3
 table_description_lines: 3
+table_show_completed: true
+theme: home_assistant
+alternating_rows: false
+apply_theme_to_compact: false
 ```
 
-Available columns are `position`, `title`, `project`, `priority`, `status`, `due`, `assignees`, `categories`, `progress`, and `created`. The title column is always included. The project column is shown only in **All projects**, where it adds useful context. Optional `table_column_widths` values are pixel widths from 80 through 600; `table_title_lines` and `table_description_lines` accept values from 1 through 10.
+Available columns are `title`, `project`, `priority`, `bucket`, `status`, `due`, `assignees`, `categories`, `progress`, and `created`. The title column is always included. The project column is shown only in **All projects**, where it adds useful context. Bucket uses the project's first Kanban view; projects without one simply have no bucket controls. Filter-generated buckets are read-only, matching Vikunja. Optional `table_column_widths` values are pixel widths from 32 through 600; `table_title_lines` and `table_description_lines` accept values from 1 through 10. Set `table_show_completed: false` to hide the completed section initially.
 
-In Table view, drag headings to reorder columns and drag a heading's right edge to resize it. Click an ascending or descending arrow to sort; click the active arrow again to return to the natural active/completed grouping. Right-click or long-press the view button for the same settings, current widths, line limits, a **No sorting** choice, and **Reset defaults**. Preferences are saved in the browser. Set `show_view_toggle: false` to lock the card to its YAML configuration.
+In Table view, active and completed tasks have separate sections and share the selected sort. Drag headings to reorder columns and drag a heading's right edge to resize it as narrow as a short abbreviation. Click a heading to replace the sort stack and cycle that column through ascending, descending, and unsorted. Right-click or long-press individual headings to append or remove secondary sorts, move their sort priority up or down, change a rule's direction, and set or clear a 40-character local alias without changing Vikunja data. Numbered arrows show multi-column precedence. View Options lists the sort stack from highest to lowest priority with controls to reorder, reverse, remove, or clear its rules, and offers **Clear all aliases** only when aliases exist.
+
+Right-click or long-press the view button for the same settings, current widths, aliases, line limits, completed-task visibility, a **No sorting** choice, and **Reset defaults**. Its Appearance section can inherit the Home Assistant theme, use custom primary-row, alternate-row, text, and accent colors, enable alternating task rows, or apply blue and green dot-matrix report-paper presets. Card themes apply to Table view by default; enable **Apply theme to Compact view** when the same appearance should also cover Compact view. Preferences are saved in the browser. The equivalent YAML keys are `theme`, `alternating_rows`, `apply_theme_to_compact`, `primary_row_color`, `alternate_row_color`, `text_color`, `accent_color`, and `table_column_aliases`. Color values use six-digit hexadecimal notation such as `#eef6fc`. Set `show_view_toggle: false` to lock the card to its YAML configuration.
 
 ## Project and category deletion
 
@@ -329,7 +339,6 @@ Never include API tokens, private service URLs, task content, or Home Assistant 
 - Add subtasks for breaking larger work into independently trackable steps.
 - Add task reminders while continuing to use Vikunja as the scheduling source of truth.
 - Add task relations for blocking, related, and cross-project task links.
-- Expand visual customization while continuing to inherit Home Assistant theme colors by default.
 - Evaluate a dedicated mobile-focused card or layout for workflows that cannot be served well by the responsive workspace.
 
 Additional roadmap ideas will be discussed before they are added here.

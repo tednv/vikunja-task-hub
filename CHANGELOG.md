@@ -6,6 +6,42 @@ The project uses semantic versioning. Dates use ISO 8601 format.
 
 ## [Unreleased]
 
+## [0.38.4] - 2026-08-17
+
+### Added
+
+- Add Kanban bucket display and sorting to Table view, plus bucket assignment from task details and task quick actions for manual Kanban views.
+- Add ordered multi-column sorting with numbered precedence indicators and controls to add, remove, reverse, and reprioritize each sort rule.
+- Add local column aliases with per-column controls and a conditional **Clear all aliases** action.
+- Add appearance settings for custom colors, alternating rows, and blue or green dot matrix report-paper themes.
+- Apply card themes to Table view by default, with an optional setting and YAML key to include Compact view.
+- Add translated controls and messages for every supported dashboard language.
+
+### Changed
+
+- Replace the internal Position column with the user-facing Kanban Bucket column.
+- Keep active and completed tasks in separate Table sections and provide a persistent option to hide completed tasks.
+- Let a normal heading click cycle through ascending, descending, and unsorted states, while right-click or long-press opens advanced column and sort controls.
+- Allow columns to shrink to 32 pixels, including when a short custom alias is used, while retaining drag-to-resize and numeric width controls.
+- Show assignees as normal table-cell text while preserving the compact italic parenthesized presentation in Compact view.
+
+### Fixed
+
+- Deduplicate tasks returned through overlapping Vikunja result sets so assigned tasks appear only once.
+- Keep column quick menus anchored and hidden until their final viewport-safe position is known.
+- Preserve task fields when changing buckets and treat filter-generated buckets as read-only.
+
+### Using this release
+
+- Click the view button beside Search to switch between Compact and Table. Right-click or long-press it to open View Options.
+- In View Options, show or hide columns, reorder them, enter exact widths, adjust title and description line limits, show or hide completed tasks, manage the full sort stack, choose an appearance, or reset the table defaults.
+- Drag a table heading to move its column and drag the heading's right edge to resize it. Columns can be reduced to 32 pixels, allowing short headings or aliases such as `Pri`.
+- Click a heading to sort ascending, click again for descending, and click a third time to remove that sort. Right-click or long-press a heading to set an alias or add the column to a multi-column sort, then move its sort priority up or down as needed.
+- Enable the Bucket column to display and sort by the task's primary Kanban bucket. Move a task from its details or task quick-action menu; filter-generated buckets remain read-only.
+- Active and completed tasks stay in separate table sections. Turn off **Show completed tasks** in View Options when only active work should be visible.
+- Choose custom colors or a blue or green dot matrix theme under Appearance. Themes apply to Table view by default; enable **Apply theme to Compact view** to use the same appearance in Compact view.
+- Card preferences are saved in the browser. Dashboard YAML can also provide theme, Compact-theme behavior, aliases, widths, visible columns, line limits, completed-task visibility, and initial sort settings as documented in the README.
+
 ## [0.36.8] - 2026-08-14
 
 ### Added
@@ -29,33 +65,6 @@ The project uses semantic versioning. Dates use ISO 8601 format.
 - Let users clear an active table sort by clicking its highlighted arrow again.
 - Make table widths predictable and expose effective default or saved widths in View Options.
 - Add runtime coverage for table configuration, column widths, sorting, assignees, and responsive view behavior.
-
-## [0.35.2] - 2026-08-09
-
-### Fixed
-
-- Keep an active **My Tasks (N)** toggle visible at zero matches so users can return to the full task view after removing the final assignment.
-
-## [0.35.1] - 2026-08-09
-
-### Added
-
-- Add local Home Assistant automation events for successful task, assignment, project, category, comment, attachment, and timer changes, with privacy-conscious payloads and practical examples.
-- Document a step-by-step Home Assistant notification automation for tasks assigned to the current Vikunja user.
-- Add stable event targets per connection for friendly assignment, task, project, category, comment, attachment, and timer automation triggers.
-- Add Home Assistant automation actions for task creation, completion, reopening, self-assignment, movement, due dates, priority, and category membership.
-- Add a conditional **My Tasks (N)** toggle that filters the current project/category view to tasks assigned to the authenticated user.
-- Show assigned users discreetly before task titles, manage assignments from task details, and assign available project users from task quick actions.
-- Provide searchable assignee pickers, removable assignment chips, a compact **Assign to me** action, and direct unassignment by right-clicking or holding assigned names.
-
-### Changed
-
-- Refresh open dashboard cards after successful Home Assistant automation actions.
-
-### Privacy and safeguards
-
-- Keep automation payloads on Home Assistant's local event bus and exclude descriptions, comment bodies, timer notes, filenames, attachment contents, API tokens, and server URLs.
-- Keep automation targets fixed per connection instead of creating entities or devices for individual projects and tasks.
 
 ## [0.32.1] - 2026-07-22
 

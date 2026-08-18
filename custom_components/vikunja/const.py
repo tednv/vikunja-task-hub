@@ -2,7 +2,7 @@ import logging
 
 DOMAIN = "vikunja"
 INTEGRATION_NAME = "Vikunja Task Hub"
-VERSION = "0.36.8"
+VERSION = "0.38.4"
 
 CONF_BASE_URL = "url"
 CONF_TOKEN = "api_key"

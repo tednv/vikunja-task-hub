@@ -15,6 +15,7 @@ class FakeTask:
     def __init__(self, api, data) -> None:
         self.api = api
         self.data = data
+        self.id = data.get("id")
 
 
 task_module = types.ModuleType("pyvikunja.models.task")
@@ -51,6 +52,62 @@ class TaskTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([task.data["comment_count"] for task in result], [1, 2])
         self.assertEqual([params["page"] for params in api.params], [1, 2])
         self.assertTrue(all(params["expand"] == "comment_count" for params in api.params))
+
+    async def test_dashboard_tasks_have_buckets_and_no_duplicates(self):
+        class ViewAPI:
+            async def _request(self, method, endpoint, params=None, data=None):
+                self.last_request = (method, endpoint, data)
+                if endpoint.endswith("/projects/4/tasks"):
+                    return {
+                        "data": [
+                            {"id": 9, "title": "Example"},
+                            {"id": 9, "title": "Example"},
+                        ],
+                        "headers": {},
+                    }
+                if endpoint.endswith("/views"):
+                    return {
+                        "data": [
+                            {
+                                "id": 3,
+                                "title": "Board",
+                                "view_kind": "kanban",
+                                "bucket_configuration_mode": "manual",
+                            },
+                        ],
+                        "headers": {},
+                    }
+                if endpoint.endswith("/views/3/tasks"):
+                    return {
+                        "data": [{"id": 11, "title": "Doing", "tasks": [{"id": 9}]}],
+                        "headers": {},
+                    }
+                raise AssertionError(endpoint)
+
+        result, view = await tasks.get_project_dashboard_tasks(ViewAPI(), 4)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].data["dashboard_bucket_id"], 11)
+        self.assertEqual(result[0].data["dashboard_bucket_title"], "Doing")
+        self.assertEqual(view["configuration_mode"], "manual")
+
+    async def test_move_task_uses_view_bucket_endpoint(self):
+        class MoveAPI:
+            async def _request(self, method, endpoint, params=None, data=None):
+                self.request = (method, endpoint, data)
+                return {"data": {}, "headers": {}}
+
+        api = MoveAPI()
+        await tasks.move_task_to_bucket(api, 4, 3, 11, 9)
+
+        self.assertEqual(
+            api.request,
+            (
+                "POST",
+                "/projects/4/views/3/buckets/11/tasks",
+                {"task_id": 9, "bucket_id": 11, "project_view_id": 3},
+            ),
+        )
 
 
 if __name__ == "__main__":
