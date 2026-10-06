@@ -14,6 +14,7 @@ from .assignees import set_task_assignees, task_assignees
 from .automation import event_data, fire_events
 from .const import DOMAIN
 from .labels import add_task_label, remove_task_label
+from .tasks import due_date_to_rfc3339
 
 ENTRY_ID = vol.Required("entry_id")
 TASK_ID = vol.Required("task_id")
@@ -120,8 +121,9 @@ async def _async_handle_service(hass: HomeAssistant, call: ServiceCall) -> None:
             details["previous_project_id"] = previous_project_id
         elif service == "set_task_due_date":
             due: datetime | None = call.data["due"]
-            await task.update({"due_date": due})
-            message["due"] = due.isoformat() if due else None
+            due_value = due_date_to_rfc3339(due, hass.config.time_zone)
+            await task.update({"due_date": due_value})
+            message["due"] = due_value
         elif service == "set_task_priority":
             await task.update({"priority": call.data["priority"]})
             message["priority"] = call.data["priority"]

@@ -28,7 +28,7 @@ from .automation import event_data, fire_events
 from .comments import add_task_comment, delete_task_comment, get_task_comments
 from .const import DOMAIN, LOGGER
 from .labels import add_task_label, remove_task_label
-from .tasks import get_project_dashboard_tasks, move_task_to_bucket
+from .tasks import due_date_to_rfc3339, get_project_dashboard_tasks, move_task_to_bucket
 from .time_tracking import TaskTimeTracker, format_duration
 
 TIME_TRACKING_EVENT = "vikunja_time_tracking_updated"
@@ -405,7 +405,7 @@ async def websocket_dashboard_action(hass, connection, msg) -> None:
                 if field in msg:
                     update[field] = msg[field]
             if "due" in msg:
-                update["due_date"] = msg["due"] or None
+                update["due_date"] = due_date_to_rfc3339(msg["due"], hass.config.time_zone)
             if update:
                 await task.update(update)
             if "label_ids" in msg:

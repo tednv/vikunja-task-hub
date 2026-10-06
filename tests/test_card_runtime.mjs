@@ -1,6 +1,26 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
+const localValues = new Map();
+globalThis.localStorage = {
+  get length() { return localValues.size; },
+  clear: () => localValues.clear(),
+  getItem: (key) => localValues.get(String(key)) ?? null,
+  key: (index) => [...localValues.keys()][index] ?? null,
+  removeItem: (key) => localValues.delete(String(key)),
+  setItem: (key, value) => localValues.set(String(key), String(value)),
+};
+
+globalThis.DOMParser = class {
+  parseFromString(value) {
+    return { body: { textContent: String(value).replace(/<[^>]*>/g, "") } };
+  }
+};
+globalThis.document = {
+  addEventListener() {},
+  removeEventListener() {},
+};
+
 const registry = new Map();
 globalThis.HTMLElement = class {
   attachShadow() {
@@ -17,7 +37,19 @@ globalThis.customElements = {
   define: (name, constructor) => registry.set(name, constructor),
   get: (name) => registry.get(name),
 };
-globalThis.window = { customCards: [], innerHeight: 768, innerWidth: 1024 };
+globalThis.window = {
+  addEventListener() {},
+  customCards: [],
+  innerHeight: 768,
+  innerWidth: 1024,
+  scrollX: 0,
+  scrollY: 0,
+  scrollTo(x, y) {
+    this.scrollX = x;
+    this.scrollY = y;
+  },
+  removeEventListener() {},
+};
 
 await import("../custom_components/vikunja/frontend/vikunja-todo-card.js");
 
@@ -83,6 +115,32 @@ assert.match(row, /Planning/);
 assert.match(row, /width:40%/);
 assert.match(row, /background:#224466/);
 assert.match(row, /<span class="assignee-list"><em class="assignee-names">\(Example Person\)<\/em><\/span>Synthetic task/);
+const linkedTask = {
+  ...card._data.tasks[0],
+  description:
+    "Read https://example.com/guide, [open notes](https://example.com/notes) and www.example.org. javascript:alert(1)",
+};
+const linkedCompactRow = card._taskRow(linkedTask);
+assert.match(linkedCompactRow, /href="https:\/\/example\.com\/guide"/);
+assert.match(linkedCompactRow, />open notes<\/a>/);
+assert.match(linkedCompactRow, /href="https:\/\/www\.example\.org"/);
+assert.match(linkedCompactRow, /javascript:alert\(1\)/);
+assert.doesNotMatch(linkedCompactRow, /href="javascript:/);
+assert.doesNotMatch(linkedCompactRow, /<button[^>]*class="body"[^>]*>[\s\S]*<a /);
+const linkedTableRow = card._tableTaskRow(linkedTask, ["title"]);
+assert.match(linkedTableRow, /href="https:\/\/example\.com\/guide"/);
+assert.match(linkedTableRow, /class="body table-title-main"/);
+const dueTableRow = card._tableTaskRow(
+  { ...card._data.tasks[0], due: "2026-10-06T12:00:00Z" },
+  ["title", "due"],
+);
+assert.match(dueTableRow, /class="table-due-cell"[^>]*>[^<]+<\/td>/);
+assert.doesNotMatch(dueTableRow, /2026-10-06T12:00:00Z/);
+const interactionSource = fs.readFileSync(
+  new URL("../custom_components/vikunja/frontend/vikunja-todo-card.js", import.meta.url),
+  "utf8",
+);
+assert.match(interactionSource, /event\.button !== 0 \|\| event\.pointerType === "mouse"/);
 card._render();
 assert.match(card.shadowRoot.innerHTML, /class="my-tasks-toggle [^"]*"[^>]*>My Tasks \(1\)<\/button>/);
 assert.doesNotMatch(card.shadowRoot.innerHTML, /class="task-table"/);
@@ -94,6 +152,32 @@ assert.match(card.shadowRoot.innerHTML, /aria-label="View options: Compact"[^>]*
 card.setConfig({ view_mode: "table" });
 assert.match(card.shadowRoot.innerHTML, /class="task-table"/);
 assert.match(card.shadowRoot.innerHTML, /aria-label="View options: Table"[^>]*>▦<\/button>/);
+localStorage.clear();
+localStorage.setItem(
+  "vikunja-todo-card:preferences:wide-card",
+  JSON.stringify({ view_mode: "table" }),
+);
+localStorage.setItem(
+  "vikunja-todo-card:preferences:simple-card",
+  JSON.stringify({ view_mode: "compact" }),
+);
+const sharedViewCard = new Card();
+sharedViewCard.setConfig({ storage_key: "simple-card" });
+assert.equal(sharedViewCard._viewMode, "table");
+assert.equal(localStorage.getItem("vikunja-todo-card:view-mode"), "table");
+let sharedViewRenders = 0;
+sharedViewCard._renderPreservingScroll = () => { sharedViewRenders += 1; };
+sharedViewCard._applySharedViewMode("compact");
+assert.equal(sharedViewCard._viewMode, "compact");
+assert.equal(sharedViewRenders, 1);
+sharedViewCard._rememberPreferences();
+assert.equal(localStorage.getItem("vikunja-todo-card:view-mode"), "compact");
+const lockedViewCard = new Card();
+lockedViewCard.setConfig({ show_view_toggle: false, view_mode: "table" });
+lockedViewCard._applySharedViewMode("compact");
+assert.equal(lockedViewCard._viewMode, "table");
+localStorage.clear();
+card._viewMode = "table";
 assert.match(card.shadowRoot.innerHTML, /data-priority="3"[^>]*>P3<\/span>/);
 assert.match(card.shadowRoot.innerHTML, /class="table-bucket-cell"[^>]*>In progress<\/td>/);
 assert.match(card.shadowRoot.innerHTML, /<h3>Active \(<span class="active-table-count">1<\/span>\)<\/h3>/);
@@ -210,6 +294,7 @@ assert.doesNotMatch(card._columnMenuTemplate(), /class="move-column-sort-down"/)
 card._columnMenu = { column: "bucket", x: 10, y: 10 };
 assert.match(card._columnMenuTemplate(), /class="add-column-sort"/);
 card._columnMenu = undefined;
+localStorage.setItem("vikunja-todo-card:view-mode", "compact");
 card.setConfig({ view_mode: "compact" });
 card._cardTheme = "dot_matrix_blue";
 card._alternatingRows = true;
@@ -252,6 +337,12 @@ assert.match(row, /Timer \(/);
 assert.doesNotMatch(row, /timer-panel/);
 card._openTimers.add(7);
 const openTimerRow = card._taskRow(card._data.tasks[0]);
+const openTimerTableRow = card._tableTaskRow(card._data.tasks[0], ["title", "status"]);
+assert.match(openTimerTableRow, /class="table-timer-row"/);
+assert.match(openTimerTableRow, /colspan="2"/);
+assert.match(openTimerTableRow, /class="timer-toggle"/);
+assert.match(openTimerTableRow, /class="timer-panel" data-task="7"/);
+assert.match(openTimerTableRow, /data-timer-action="pause"/);
 assert.match(openTimerRow, /00:01:05/);
 assert.match(openTimerRow, /Drafted the plan/);
 assert.match(openTimerRow, /textarea class="timer-note-input" rows="3"/);
@@ -302,7 +393,7 @@ assert.doesNotMatch(card._contextMenuTemplate(), /data-context="time-|timer-limi
 card._contextMenu = undefined;
 card._render();
 assert.doesNotMatch(card.shadowRoot.innerHTML, /Select all \(0 selected\)/);
-assert.match(card.shadowRoot.innerHTML, /tips\.html\?lang=en&amp;v=0\.38\.4|tips\.html\?lang=en&v=0\.38\.4/);
+assert.match(card.shadowRoot.innerHTML, /tips\.html\?lang=en&amp;v=0\.38\.15|tips\.html\?lang=en&v=0\.38\.15/);
 card._selectedTasks.add(7);
 card._render();
 assert.match(card.shadowRoot.innerHTML, /Select all \(1 selected\)/);
@@ -331,6 +422,24 @@ activityCallback({ data: { entry_id: "example-entry" } });
 await new Promise((resolve) => setTimeout(resolve, 0));
 assert.equal(activityLoads, 1);
 card._loading = false;
+
+const reconnectCard = new Card();
+let reconnectLoads = 0;
+let reconnectTimerSubscriptions = 0;
+let reconnectActivitySubscriptions = 0;
+reconnectCard._hass = {};
+reconnectCard._data = { tasks: [] };
+reconnectCard._load = async () => { reconnectLoads += 1; };
+reconnectCard._subscribeTimeTracking = async () => { reconnectTimerSubscriptions += 1; };
+reconnectCard._subscribeActivity = async () => { reconnectActivitySubscriptions += 1; };
+reconnectCard.connectedCallback();
+assert.equal(reconnectLoads, 0);
+reconnectCard.disconnectedCallback();
+reconnectCard.connectedCallback();
+assert.equal(reconnectLoads, 1);
+assert.equal(reconnectTimerSubscriptions, 2);
+assert.equal(reconnectActivitySubscriptions, 2);
+reconnectCard.disconnectedCallback();
 
 card._editingTask = card._data.tasks[0];
 card._comments.set(7, [{ id: 4, author: "Example person", comment: "Synthetic comment", created: "2026-07-22T12:30:00Z" }]);
@@ -375,6 +484,74 @@ assert.match(alignedUncoloredRow, /reserve-color/);
 assert.match(alignedUncoloredRow, /task-color-spacer/);
 assert.ok(alignedUncoloredRow.indexOf("task-color-spacer") < alignedUncoloredRow.indexOf('type="checkbox"'));
 
+card._contextMenu = { taskId: 7, x: 10, y: 10 };
+assert.match(card._taskRow(card._data.tasks[0]), /class="row [^"]*context-target/);
+assert.match(card._tableTaskRow(card._data.tasks[0], ["title"]), /class="row [^"]*context-target/);
+assert.doesNotMatch(card._taskRow(uncoloredTask), /context-target/);
+
+const originalQuerySelectorAll = card.shadowRoot.querySelectorAll;
+const tableBefore = { scrollTop: 11, scrollLeft: 123 };
+const tableAfter = { scrollTop: 0, scrollLeft: 0 };
+card.scrollTop = 47;
+card.scrollLeft = 9;
+window.scrollX = 4;
+window.scrollY = 88;
+card.shadowRoot.querySelectorAll = (selector) => selector === ".table-scroll" ? [tableBefore] : [];
+const scrollState = card._captureScrollState();
+card.scrollTop = 0;
+card.scrollLeft = 0;
+window.scrollX = 0;
+window.scrollY = 0;
+card.shadowRoot.querySelectorAll = (selector) => selector === ".table-scroll" ? [tableAfter] : [];
+card._restoreScrollState(scrollState);
+assert.equal(card.scrollTop, 47);
+assert.equal(card.scrollLeft, 9);
+assert.equal(tableAfter.scrollTop, 11);
+assert.equal(tableAfter.scrollLeft, 123);
+assert.equal(window.scrollX, 4);
+assert.equal(window.scrollY, 88);
+card.shadowRoot.querySelectorAll = originalQuerySelectorAll;
+
+const originalRenderPreservingScroll = card._renderPreservingScroll;
+let outsideDismissRenders = 0;
+card._renderPreservingScroll = () => { outsideDismissRenders += 1; };
+card._contextMenu = { taskId: 7, x: 10, y: 10 };
+card._columnMenu = { column: "title", x: 20, y: 20 };
+card._dismissMenusFromOutside({
+  composedPath: () => [{ classList: { contains: (name) => name === "context-menu" } }],
+});
+assert.equal(card._contextMenu.taskId, 7);
+assert.equal(outsideDismissRenders, 0);
+card._dismissMenusFromOutside({ composedPath: () => [] });
+assert.equal(card._contextMenu, undefined);
+assert.equal(card._columnMenu, undefined);
+assert.equal(outsideDismissRenders, 1);
+card._renderPreservingScroll = originalRenderPreservingScroll;
+
+let escapeDismissRenders = 0;
+card._renderPreservingScroll = () => { escapeDismissRenders += 1; };
+card._contextMenu = { taskId: 7, x: 10, y: 10 };
+card._columnMenu = { column: "title", x: 20, y: 20 };
+card._viewOptionsOpen = true;
+card._editingTask = card._data.tasks[0];
+card._deleteRequest = { type: "task", id: 7 };
+let escapePrevented = false;
+let escapeStopped = false;
+card._dismissOverlayWithEscape({
+  key: "Escape",
+  preventDefault: () => { escapePrevented = true; },
+  stopPropagation: () => { escapeStopped = true; },
+});
+assert.equal(card._contextMenu, undefined);
+assert.equal(card._columnMenu, undefined);
+assert.equal(card._viewOptionsOpen, false);
+assert.equal(card._editingTask, undefined);
+assert.equal(card._deleteRequest, undefined);
+assert.equal(escapeDismissRenders, 1);
+assert.equal(escapePrevented, true);
+assert.equal(escapeStopped, true);
+card._renderPreservingScroll = originalRenderPreservingScroll;
+
 const positionedMenu = {
   style: {},
   getBoundingClientRect: () => ({ width: 190, height: 250 }),
@@ -400,6 +577,17 @@ assert.match(cardSource, /-webkit-line-clamp:\$\{this\._titleLineLimit\}/);
 assert.match(cardSource, /const MIN_COLUMN_WIDTH = 32/);
 assert.doesNotMatch(cardSource, /\.task-table \.table-title[^}]*min-width/);
 assert.match(cardSource, /\.table-title-main[^}]*max-width:100%/);
+assert.ok((cardSource.match(/event\.target\.closest\("a"\)/g) ?? []).length >= 2);
+assert.match(cardSource, /closest\('input,button,a,\.task-color'\)/);
+assert.match(cardSource, /document\.addEventListener\("click", this\._outsideMenuClickHandler\)/);
+assert.match(cardSource, /document\.removeEventListener\("click", this\._outsideMenuClickHandler\)/);
+assert.match(cardSource, /window\.addEventListener\(VIEW_MODE_EVENT/);
+assert.match(cardSource, /window\.removeEventListener\(VIEW_MODE_EVENT/);
+assert.match(cardSource, /document\.addEventListener\("keydown", this\._escapeKeyHandler\)/);
+assert.match(cardSource, /document\.removeEventListener\("keydown", this\._escapeKeyHandler\)/);
+assert.match(cardSource, /requestAnimationFrame\(\(\) => \{[\s\S]*requestAnimationFrame\(\(\) => this\._restoreScrollState\(state\)\)/);
+assert.match(cardSource, /this\._viewOptionsOpen = true;\s+this\._renderPreservingScroll\(\)/);
+assert.match(cardSource, /this\._columnMenu = \{[\s\S]*?this\._renderPreservingScroll\(\);\s+this\._positionColumnMenu\(\)/);
 assert.match(tipsSource, /class="guide"/);
 for (const key of [
   "tipsSelectionGuide",

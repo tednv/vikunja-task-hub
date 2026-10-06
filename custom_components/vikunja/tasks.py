@@ -2,7 +2,40 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime, time, tzinfo
+from zoneinfo import ZoneInfo
+
 from pyvikunja.models.task import Task
+
+
+def due_date_to_rfc3339(value: date | datetime | str | None, time_zone: str | tzinfo) -> str | None:
+    """Return a Vikunja-compatible due date in Home Assistant's timezone."""
+    if value is None:
+        return None
+
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, date):
+        parsed = datetime.combine(value, time.min)
+    elif isinstance(value, str):
+        candidate = value.strip()
+        if not candidate:
+            return None
+        try:
+            parsed = (
+                datetime.combine(date.fromisoformat(candidate), time.min)
+                if len(candidate) == 10
+                else datetime.fromisoformat(candidate.replace("Z", "+00:00"))
+            )
+        except ValueError as error:
+            raise ValueError("Due date must be a valid ISO 8601 date or date-time") from error
+    else:
+        raise TypeError("Due date must be a date, date-time, string, or null")
+
+    if parsed.tzinfo is None:
+        zone = ZoneInfo(time_zone) if isinstance(time_zone, str) else time_zone
+        parsed = parsed.replace(tzinfo=zone)
+    return parsed.isoformat(timespec="seconds")
 
 
 def _items(response) -> list[dict]:

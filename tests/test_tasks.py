@@ -6,7 +6,9 @@ import importlib.util
 import sys
 import types
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest import mock
 
 
 class FakeTask:
@@ -44,6 +46,47 @@ class FakeAPI:
 
 
 class TaskTests(unittest.IsolatedAsyncioTestCase):
+    def test_due_date_only_uses_home_assistant_timezone(self):
+        with mock.patch.object(
+            tasks, "ZoneInfo", return_value=timezone(timedelta(hours=-5))
+        ) as zone_info:
+            self.assertEqual(
+                tasks.due_date_to_rfc3339("2030-07-15", "America/Chicago"),
+                "2030-07-15T00:00:00-05:00",
+            )
+        zone_info.assert_called_once_with("America/Chicago")
+
+    def test_naive_due_datetime_uses_home_assistant_timezone(self):
+        with mock.patch.object(tasks, "ZoneInfo", return_value=timezone(timedelta(hours=-6))):
+            self.assertEqual(
+                tasks.due_date_to_rfc3339(datetime(2030, 1, 15, 12, 30), "America/Chicago"),
+                "2030-01-15T12:30:00-06:00",
+            )
+
+    def test_aware_due_datetime_preserves_its_offset(self):
+        value = datetime(2030, 7, 15, 12, 30, tzinfo=timezone(timedelta(hours=2)))
+
+        self.assertEqual(
+            tasks.due_date_to_rfc3339(value, "America/Chicago"),
+            "2030-07-15T12:30:00+02:00",
+        )
+
+    def test_due_date_can_be_cleared(self):
+        self.assertIsNone(tasks.due_date_to_rfc3339(None, "America/Chicago"))
+        self.assertIsNone(tasks.due_date_to_rfc3339("", "America/Chicago"))
+
+    def test_due_date_rejects_invalid_input(self):
+        with self.assertRaisesRegex(ValueError, "valid ISO 8601"):
+            tasks.due_date_to_rfc3339("not-a-date", "America/Chicago")
+
+    def test_due_date_update_paths_use_shared_normalizer(self):
+        root = Path(__file__).resolve().parents[1] / "custom_components" / "vikunja"
+        services = (root / "services.py").read_text(encoding="utf-8")
+        dashboard = (root / "dashboard.py").read_text(encoding="utf-8")
+
+        self.assertIn("due_date_to_rfc3339(due, hass.config.time_zone)", services)
+        self.assertIn('due_date_to_rfc3339(msg["due"], hass.config.time_zone)', dashboard)
+
     async def test_comment_counts_are_expanded_on_every_page(self):
         api = FakeAPI()
 

@@ -1,8 +1,10 @@
-import { TRANSLATIONS } from "./vikunja-todo-card-translations.js?v=0.38.4";
+import { TRANSLATIONS } from "./vikunja-todo-card-translations.js?v=0.38.15";
 
 const CARD_TYPE = "vikunja-todo-card";
 const STORAGE_PREFIX = "vikunja-todo-card:selected:";
 const PREFERENCES_PREFIX = "vikunja-todo-card:preferences:";
+const SHARED_VIEW_MODE_KEY = "vikunja-todo-card:view-mode";
+const VIEW_MODE_EVENT = "vikunja-task-hub-view-mode-changed";
 const VIEW_MODES = new Set(["compact", "table"]);
 const CARD_THEMES = new Set(["home_assistant", "custom", "dot_matrix_blue", "dot_matrix_green"]);
 const MIN_COLUMN_WIDTH = 32;
@@ -102,20 +104,33 @@ class VikunjaTodoCard extends HTMLElement {
     this._viewOptionsOpen = false;
     this._dataReceivedAt = Date.now();
     this._timerTicker = undefined;
+    this._hasConnected = false;
     this._unsubscribeTimeTracking = undefined;
     this._unsubscribeActivity = undefined;
+    this._outsideMenuClickHandler = (event) => this._dismissMenusFromOutside(event);
+    this._escapeKeyHandler = (event) => this._dismissOverlayWithEscape(event);
+    this._viewModeChangeHandler = (event) => this._applySharedViewMode(event.detail?.viewMode);
   }
 
   connectedCallback() {
+    const reconnecting = this._hasConnected;
+    this._hasConnected = true;
+    document.addEventListener("click", this._outsideMenuClickHandler);
+    document.addEventListener("keydown", this._escapeKeyHandler);
+    window.addEventListener(VIEW_MODE_EVENT, this._viewModeChangeHandler);
     if (!this._timerTicker)
       this._timerTicker = setInterval(() => this._updateElapsedTimers(), 1000);
     if (this._hass) {
       void this._subscribeTimeTracking();
       void this._subscribeActivity();
+      if (reconnecting && !this._loading) void this._load();
     }
   }
 
   disconnectedCallback() {
+    document.removeEventListener("click", this._outsideMenuClickHandler);
+    document.removeEventListener("keydown", this._escapeKeyHandler);
+    window.removeEventListener(VIEW_MODE_EVENT, this._viewModeChangeHandler);
     clearInterval(this._timerTicker);
     this._timerTicker = undefined;
     this._unsubscribeTimeTracking?.();
@@ -223,9 +238,12 @@ class VikunjaTodoCard extends HTMLElement {
     }
     this._config = { ...config };
     const preferences = config.show_view_toggle === false ? {} : this._readPreferences();
-    this._viewMode = VIEW_MODES.has(preferences.view_mode)
+    const preferredView = VIEW_MODES.has(preferences.view_mode)
       ? preferences.view_mode
       : configuredView;
+    this._viewMode = config.show_view_toggle === false
+      ? configuredView
+      : this._readSharedViewMode(preferredView);
     if (Array.isArray(preferences.sort_rules)) {
       this._sortRules = preferences.sort_rules
         .filter(
@@ -446,6 +464,39 @@ class VikunjaTodoCard extends HTMLElement {
     }
   }
 
+  _readSharedViewMode(fallback) {
+    try {
+      const stored = localStorage.getItem(SHARED_VIEW_MODE_KEY);
+      if (VIEW_MODES.has(stored)) return stored;
+      let migrated;
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (!key?.startsWith(PREFERENCES_PREFIX)) continue;
+        const value = JSON.parse(localStorage.getItem(key) ?? "{}");
+        if (value?.view_mode === "table") {
+          migrated = "table";
+          break;
+        }
+        if (value?.view_mode === "compact") migrated = migrated ?? "compact";
+      }
+      const viewMode = VIEW_MODES.has(migrated) ? migrated : fallback;
+      localStorage.setItem(SHARED_VIEW_MODE_KEY, viewMode);
+      return viewMode;
+    } catch (_error) {
+      return fallback;
+    }
+  }
+
+  _applySharedViewMode(viewMode) {
+    if (
+      this._config.show_view_toggle === false ||
+      !VIEW_MODES.has(viewMode) ||
+      viewMode === this._viewMode
+    ) return;
+    this._viewMode = viewMode;
+    this._renderPreservingScroll();
+  }
+
   _rememberPreferences() {
     if (this._config.show_view_toggle === false) return;
     try {
@@ -467,6 +518,10 @@ class VikunjaTodoCard extends HTMLElement {
           apply_theme_to_compact: this._applyThemeToCompact,
           custom_colors: this._customColors,
         }),
+      );
+      localStorage.setItem(SHARED_VIEW_MODE_KEY, this._viewMode);
+      window.dispatchEvent?.(
+        new CustomEvent(VIEW_MODE_EVENT, { detail: { viewMode: this._viewMode } }),
       );
     } catch (_error) {
       /* optional */
@@ -928,10 +983,15 @@ class VikunjaTodoCard extends HTMLElement {
         .row { display:grid; grid-template-columns:auto minmax(0,1fr) minmax(54px,90px); gap:9px; align-items:start; padding:11px 14px; }
         .task-shell.reserve-color .row { grid-template-columns:auto auto minmax(0,1fr) minmax(54px,90px); }
         .row[hidden] { display:none; }
+        .row.context-target { background:color-mix(in srgb,var(--primary-color) 14%,var(--card-background-color)) !important; box-shadow:inset 4px 0 0 var(--primary-color); }
+        .task-table .row.context-target > td { background:color-mix(in srgb,var(--primary-color) 14%,var(--card-background-color)) !important; }
+        .task-table .row.context-target > td:first-child { box-shadow:inset 4px 0 0 var(--primary-color); }
         .row.done .summary { text-decoration:line-through; color:var(--secondary-text-color); }
         .body { min-width:0; cursor:pointer; display:block; width:100%; padding:0; border:0; border-radius:0; background:transparent; text-align:left; }
+        .task-open { display:block; width:100%; padding:0; border:0; border-radius:0; background:transparent; color:inherit; text-align:left; cursor:pointer; }
         .summary { font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .description { color:var(--secondary-text-color); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px; }
+        .description a { color:var(--primary-color); text-decoration:underline; text-underline-offset:2px; }
         .comment-toggle, .timer-toggle { display:block; margin:0 14px 8px 49px; padding:4px 0; background:transparent; color:var(--secondary-text-color); font-weight:600; text-align:left; }
         .task-color { width:14px; height:14px; margin-top:3px; border-radius:50%; align-self:start; }
         .task-color-spacer { width:14px; height:14px; }
@@ -961,6 +1021,9 @@ class VikunjaTodoCard extends HTMLElement {
         .timer-schedule-item { display:flex; gap:8px; align-items:center; justify-content:space-between; padding:6px 8px; border-radius:7px; background:var(--secondary-background-color); }
         .timer-note-field { display:grid; gap:5px; width:50%; min-width:220px; }
         .timer-note-field textarea { width:100%; min-height:64px; box-sizing:border-box; resize:vertical; }
+        .table-timer-row > td { padding:0; border-top:0; }
+        .table-timer-row .timer-toggle { margin:6px 14px 8px; }
+        .table-timer-row .timer-panel { margin:0 14px 10px; }
         .comments-editor { margin:16px 0; padding:12px; border:1px solid var(--divider-color); border-radius:10px; }
         .comments-editor h3 { margin:0 0 10px; font-size:15px; }
         .editor-comment { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; padding:8px 0; border-bottom:1px solid var(--divider-color); }
@@ -1133,7 +1196,7 @@ class VikunjaTodoCard extends HTMLElement {
         }
         <div class="card-links">
           ${this._vikunjaUrl ? `<a class="card-link" href="${this._escape(this._projectVikunjaUrl())}" target="_blank" rel="noopener noreferrer">${this._t("openVikunja")}</a>` : ""}
-          <a class="card-link" href="/vikunja-static/tips.html?lang=${encodeURIComponent(this._language())}&v=0.38.4" target="_blank" rel="noopener noreferrer">${this._t("tips")}</a>
+          <a class="card-link" href="/vikunja-static/tips.html?lang=${encodeURIComponent(this._language())}&v=0.38.15" target="_blank" rel="noopener noreferrer">${this._t("tips")}</a>
           <a class="card-link" href="https://github.com/tednv/vikunja-task-hub" target="_blank" rel="noopener noreferrer">${this._t("aboutRepository")}</a>
           <a class="card-link" href="https://buymeacoffee.com/tednv" target="_blank" rel="noopener noreferrer">${this._t("support")}</a>
         </div>
@@ -1146,27 +1209,13 @@ class VikunjaTodoCard extends HTMLElement {
     this._wireEvents();
   }
 
-  _taskRow(task, reserveColorSpace = Boolean(task.hex_color)) {
-    const recurring = Number(task.repeat_after) > 0 || Number(task.repeat_mode) === 1;
-    const priority = Math.max(0, Math.min(5, Number(task.priority) || 0));
-    const labels = (this._data?.labels ?? []).filter((label) =>
-      task.labels.map(String).includes(String(label.id)),
-    );
-    const progress = Math.max(0, Math.min(100, Math.round(Number(task.percent_done) * 100)));
-    const comments = this._comments.get(Number(task.id));
+  _timerTemplate(task) {
     const timer = this._data?.time_tracking?.[String(task.id)];
-    const assigneeNames = (task.assignees ?? []).map((user) => this._userName(user)).filter(Boolean);
-    const scheduledActions = timer?.scheduled_actions ?? [];
-    const elapsed = Number(timer?.elapsed ?? 0) + (timer?.state === "active" ? Math.max(0, Math.floor((Date.now() - this._dataReceivedAt) / 1000)) : 0);
-    return `<div class="task-shell ${reserveColorSpace ? "reserve-color" : ""}">
-    <div class="row ${task.done ? "done" : ""}" data-task="${task.id}" data-search-title="${this._escape(task.title.toLocaleLowerCase())}">
-      ${task.hex_color ? `<span class="task-color" style="background:#${this._escape(task.hex_color)}" title="${this._t("color")}"></span>` : reserveColorSpace ? `<span class="task-color-spacer" aria-hidden="true"></span>` : ""}
-      <input type="checkbox" aria-label="${this._t("selectTask")}" ${this._selectedTasks.has(Number(task.id)) ? "checked" : ""}>
-      <button type="button" class="body" aria-label="${this._t("editTask")}"><div class="summary">${recurring ? `<span class="recurring-icon" title="${this._t("recurringTask")}" aria-label="${this._t("recurringTask")}">↻</span>` : ""}${priority ? `<span class="priority-marker" title="${this._t("priority")}: ${priority}">${"!".repeat(priority)}</span>` : ""}${assigneeNames.length ? `<span class="assignee-list"><em class="assignee-names">(${this._escape(assigneeNames.join(", "))})</em></span>` : ""}${this._escape(task.title)}</div>${labels.length ? `<div class="task-labels">${labels.map((label) => `<span class="task-label" style="${label.color ? `border-left:3px solid #${this._escape(label.color)}` : ""}">${this._escape(label.title)}</span>`).join("")}</div>` : ""}${task.description ? `<div class="description">${this._escape(this._plainText(task.description))}</div>` : ""}</button>
-      ${progress > 0 ? `<div class="progress-wrap" title="${this._t("progress")}: ${progress}%"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><div class="progress-text">${progress}%</div></div>` : "<span></span>"}
-    </div>
-    ${timer ? `<button type="button" class="timer-toggle" aria-expanded="${this._openTimers.has(Number(task.id))}">${this._openTimers.has(Number(task.id)) ? "▾" : "▸"} ${this._t("timer")} (<span class="timer-state-icon">${timer.state === "active" ? "⏱" : "⏸"}</span> <span class="timer-elapsed" data-base="${Number(timer.elapsed ?? 0)}" data-snapshot="${this._dataReceivedAt}" data-active="${timer.state === "active"}">${this._formatElapsed(elapsed)}</span>)</button>` : ""}
-    ${timer && this._openTimers.has(Number(task.id)) ? `<div class="timer-panel" data-task="${task.id}">
+    if (!timer) return "";
+    const scheduledActions = timer.scheduled_actions ?? [];
+    const elapsed = Number(timer.elapsed ?? 0) + (timer.state === "active" ? Math.max(0, Math.floor((Date.now() - this._dataReceivedAt) / 1000)) : 0);
+    return `<button type="button" class="timer-toggle" aria-expanded="${this._openTimers.has(Number(task.id))}">${this._openTimers.has(Number(task.id)) ? "▾" : "▸"} ${this._t("timer")} (<span class="timer-state-icon">${timer.state === "active" ? "⏱" : "⏸"}</span> <span class="timer-elapsed" data-base="${Number(timer.elapsed ?? 0)}" data-snapshot="${this._dataReceivedAt}" data-active="${timer.state === "active"}">${this._formatElapsed(elapsed)}</span>)</button>
+    ${this._openTimers.has(Number(task.id)) ? `<div class="timer-panel" data-task="${task.id}">
       <div class="timer-controls">
         ${scheduledActions.length ? `<div class="timer-schedules">${scheduledActions.map((scheduled) => `<div class="timer-schedule-item"><span>${this._t(scheduled.action === "stop" ? "stopTimer" : scheduled.action === "pause" ? "pauseTimer" : "startTimer")} · ${this._escape(this._formatDateTime(scheduled.at))}</span><button type="button" data-schedule-id="${this._escape(scheduled.id)}">${this._t("cancel")}</button></div>`).join("")}</div>` : ""}
         <label class="timer-note-field">${this._t("timerNote")}<textarea class="timer-note-input" rows="3" maxlength="500">${this._escape(timer.note ?? "")}</textarea></label>
@@ -1182,7 +1231,26 @@ class VikunjaTodoCard extends HTMLElement {
           <button type="button" class="danger" data-timer-action="cancel">${this._t("cancel")}</button>
         </div>
       </div>
-    </div>` : ""}
+    </div>` : ""}`;
+  }
+
+  _taskRow(task, reserveColorSpace = Boolean(task.hex_color)) {
+    const recurring = Number(task.repeat_after) > 0 || Number(task.repeat_mode) === 1;
+    const priority = Math.max(0, Math.min(5, Number(task.priority) || 0));
+    const labels = (this._data?.labels ?? []).filter((label) =>
+      task.labels.map(String).includes(String(label.id)),
+    );
+    const progress = Math.max(0, Math.min(100, Math.round(Number(task.percent_done) * 100)));
+    const comments = this._comments.get(Number(task.id));
+    const assigneeNames = (task.assignees ?? []).map((user) => this._userName(user)).filter(Boolean);
+    return `<div class="task-shell ${reserveColorSpace ? "reserve-color" : ""}">
+    <div class="row ${task.done ? "done" : ""} ${Number(this._contextMenu?.taskId) === Number(task.id) ? "context-target" : ""}" data-task="${task.id}" data-search-title="${this._escape(task.title.toLocaleLowerCase())}">
+      ${task.hex_color ? `<span class="task-color" style="background:#${this._escape(task.hex_color)}" title="${this._t("color")}"></span>` : reserveColorSpace ? `<span class="task-color-spacer" aria-hidden="true"></span>` : ""}
+      <input type="checkbox" aria-label="${this._t("selectTask")}" ${this._selectedTasks.has(Number(task.id)) ? "checked" : ""}>
+      <div class="body"><button type="button" class="task-open" aria-label="${this._t("editTask")}"><div class="summary">${recurring ? `<span class="recurring-icon" title="${this._t("recurringTask")}" aria-label="${this._t("recurringTask")}">↻</span>` : ""}${priority ? `<span class="priority-marker" title="${this._t("priority")}: ${priority}">${"!".repeat(priority)}</span>` : ""}${assigneeNames.length ? `<span class="assignee-list"><em class="assignee-names">(${this._escape(assigneeNames.join(", "))})</em></span>` : ""}${this._escape(task.title)}</div>${labels.length ? `<div class="task-labels">${labels.map((label) => `<span class="task-label" style="${label.color ? `border-left:3px solid #${this._escape(label.color)}` : ""}">${this._escape(label.title)}</span>`).join("")}</div>` : ""}</button>${task.description ? `<div class="description">${this._descriptionPreview(task.description)}</div>` : ""}</div>
+      ${progress > 0 ? `<div class="progress-wrap" title="${this._t("progress")}: ${progress}%"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><div class="progress-text">${progress}%</div></div>` : "<span></span>"}
+    </div>
+    ${this._timerTemplate(task)}
     ${Number(task.comment_count) > 0 ? `<button type="button" class="comment-toggle" aria-expanded="${this._openComments.has(Number(task.id))}">${this._openComments.has(Number(task.id)) ? "▾" : "▸"} ${this._t("comments")} (${Number(task.comment_count)})</button>` : ""}
     ${Number(task.comment_count) > 0 && this._openComments.has(Number(task.id)) ? `<div class="comments-panel">${comments === undefined ? this._t("loading") : comments.map((comment) => `<div class="comment"><div class="comment-meta">${this._escape(comment.author || this._t("comments"))}${comment.created ? ` · <span class="comment-time">${this._escape(this._formatDateTime(comment.created))}</span>` : ""}</div><div class="comment-text">${this._escape(comment.comment)}</div></div>`).join("")}</div>` : ""}
     </div>`;
@@ -1198,7 +1266,7 @@ class VikunjaTodoCard extends HTMLElement {
       title: `<td class="table-title-cell"><div class="table-title-content">
         ${task.hex_color ? `<span class="task-color" style="background:#${this._escape(task.hex_color)}" title="${this._t("color")}"></span>` : reserveColorSpace ? `<span class="task-color-spacer" aria-hidden="true"></span>` : ""}
         <input type="checkbox" aria-label="${this._t("selectTask")}" ${this._selectedTasks.has(Number(task.id)) ? "checked" : ""}>
-        <button type="button" class="body table-title-main" aria-label="${this._t("editTask")}"><div class="summary">${recurring ? `<span class="recurring-icon" title="${this._t("recurringTask")}" aria-label="${this._t("recurringTask")}">↻</span>` : ""}${this._escape(task.title)}</div>${task.description ? `<div class="description">${this._escape(this._plainText(task.description))}</div>` : ""}${Number(task.comment_count) ? `<div class="description">${this._t("comments")} (${Number(task.comment_count)})</div>` : ""}</button>
+        <div class="body table-title-main"><button type="button" class="task-open" aria-label="${this._t("editTask")}"><div class="summary">${recurring ? `<span class="recurring-icon" title="${this._t("recurringTask")}" aria-label="${this._t("recurringTask")}">↻</span>` : ""}${this._escape(task.title)}</div></button>${task.description ? `<div class="description">${this._descriptionPreview(task.description)}</div>` : ""}${Number(task.comment_count) ? `<div class="description">${this._t("comments")} (${Number(task.comment_count)})</div>` : ""}</div>
       </div></td>`,
       project: `<td class="table-project-cell">${this._escape(this._projectTitle(task) || "—")}</td>`,
       priority: `<td class="table-priority-cell"><span class="priority-badge" data-priority="${priority}" title="${this._t("priority")}: ${priority}">P${priority}</span></td>`,
@@ -1210,7 +1278,8 @@ class VikunjaTodoCard extends HTMLElement {
       progress: `<td class="table-progress-cell"><div class="progress-wrap" title="${this._t("progress")}: ${progress}%"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><div class="progress-text">${progress}%</div></div></td>`,
       created: `<td class="table-created-cell">${task.created ? this._escape(this._formatDateTime(task.created)) : "—"}</td>`,
     };
-    return `<tbody class="task-shell"><tr class="row ${task.done ? "done" : ""}" data-task="${task.id}" data-search-title="${this._escape(task.title.toLocaleLowerCase())}">${columns.map((column) => cells[column]).join("")}</tr></tbody>`;
+    const timer = this._timerTemplate(task);
+    return `<tbody class="task-shell"><tr class="row ${task.done ? "done" : ""} ${Number(this._contextMenu?.taskId) === Number(task.id) ? "context-target" : ""}" data-task="${task.id}" data-search-title="${this._escape(task.title.toLocaleLowerCase())}">${columns.map((column) => cells[column]).join("")}</tr>${timer ? `<tr class="table-timer-row"><td colspan="${columns.length}">${timer}</td></tr>` : ""}</tbody>`;
   }
 
   _viewOptionsTemplate() {
@@ -1345,6 +1414,83 @@ class VikunjaTodoCard extends HTMLElement {
     menu.style.left = `${x}px`;
     menu.style.top = `${y}px`;
     menu.style.visibility = "visible";
+  }
+
+  _captureScrollState() {
+    const ancestors = [];
+    const seen = new Set();
+    let current = this;
+    while (current && !seen.has(current)) {
+      seen.add(current);
+      if (typeof current.scrollTop === "number" && typeof current.scrollLeft === "number") {
+        ancestors.push({ element: current, top: current.scrollTop, left: current.scrollLeft });
+      }
+      const root = current.getRootNode?.();
+      current = current.parentElement ?? root?.host;
+    }
+    const tables = [...(this.shadowRoot?.querySelectorAll(".table-scroll") ?? [])].map(
+      (element) => ({ top: element.scrollTop, left: element.scrollLeft }),
+    );
+    return {
+      ancestors,
+      tables,
+      windowX: Number(window.scrollX) || 0,
+      windowY: Number(window.scrollY) || 0,
+    };
+  }
+
+  _restoreScrollState(state) {
+    state.ancestors.forEach(({ element, top, left }) => {
+      element.scrollTop = top;
+      element.scrollLeft = left;
+    });
+    [...(this.shadowRoot?.querySelectorAll(".table-scroll") ?? [])].forEach((element, index) => {
+      const position = state.tables[index];
+      if (!position) return;
+      element.scrollTop = position.top;
+      element.scrollLeft = position.left;
+    });
+    if (typeof window.scrollTo === "function") window.scrollTo(state.windowX, state.windowY);
+  }
+
+  _renderPreservingScroll() {
+    const state = this._captureScrollState();
+    this._render();
+    this._restoreScrollState(state);
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => {
+        this._restoreScrollState(state);
+        requestAnimationFrame(() => this._restoreScrollState(state));
+      });
+    }
+  }
+
+  _dismissOverlayWithEscape(event) {
+    if (
+      event.key !== "Escape" ||
+      (!this._contextMenu &&
+        !this._columnMenu &&
+        !this._viewOptionsOpen &&
+        !this._editingTask &&
+        !this._deleteRequest)
+    ) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this._contextMenu = undefined;
+    this._columnMenu = undefined;
+    this._viewOptionsOpen = false;
+    this._editingTask = undefined;
+    this._deleteRequest = undefined;
+    this._renderPreservingScroll();
+  }
+
+  _dismissMenusFromOutside(event) {
+    if (!this._contextMenu && !this._columnMenu) return;
+    const path = event.composedPath?.() ?? [];
+    if (path.some((item) => item?.classList?.contains("context-menu"))) return;
+    this._contextMenu = undefined;
+    this._columnMenu = undefined;
+    this._renderPreservingScroll();
   }
 
   _positionColumnMenu() {
@@ -1559,7 +1705,7 @@ class VikunjaTodoCard extends HTMLElement {
       const openViewOptions = (event) => {
         event?.preventDefault();
         this._viewOptionsOpen = true;
-        this._render();
+        this._renderPreservingScroll();
       };
       viewButton.addEventListener("click", () => {
         if (suppressViewClick) {
@@ -1572,7 +1718,7 @@ class VikunjaTodoCard extends HTMLElement {
       });
       viewButton.addEventListener("contextmenu", openViewOptions);
       viewButton.addEventListener("pointerdown", (event) => {
-        if (event.button !== 0) return;
+        if (event.button !== 0 || event.pointerType === "mouse") return;
         viewLongPressTimer = setTimeout(() => {
           suppressViewClick = true;
           openViewOptions(event);
@@ -1770,7 +1916,7 @@ class VikunjaTodoCard extends HTMLElement {
           y: anchor.bottom,
           anchorTop: anchor.top,
         };
-        this._render();
+        this._renderPreservingScroll();
         this._positionColumnMenu();
       };
       header.addEventListener("contextmenu", openColumnMenu);
@@ -1887,14 +2033,15 @@ class VikunjaTodoCard extends HTMLElement {
           y: event.clientY,
           ...(mode ? { mode } : {}),
         };
-        this._render();
+        this._renderPreservingScroll();
         this._positionContextMenu();
       };
-      row.addEventListener("contextmenu", (event) =>
-        openMenu(event, event.target.closest(".assignee-list") ? "unassign" : undefined),
-      );
+      row.addEventListener("contextmenu", (event) => {
+        if (event.target.closest("a")) return;
+        openMenu(event, event.target.closest(".assignee-list") ? "unassign" : undefined);
+      });
       row.addEventListener("pointerdown", (event) => {
-        if (event.button !== 0 || event.target.matches('input,button,.task-color')) return;
+        if (event.button !== 0 || event.target.closest('input,button,a,.task-color')) return;
         const mode = event.target.closest(".assignee-list") ? "unassign" : undefined;
         longPressTimer = setTimeout(() => {
           longPressOpened = true;
@@ -2006,7 +2153,8 @@ class VikunjaTodoCard extends HTMLElement {
         input.type = event.target.value === "timestamp" ? "datetime-local" : "number";
         input.value = "";
       });
-      row.querySelector(".body")?.addEventListener("click", () => {
+      row.querySelector(".body")?.addEventListener("click", (event) => {
+        if (event.target.closest("a")) return;
         if (longPressOpened) {
           longPressOpened = false;
           return;
@@ -2179,8 +2327,7 @@ class VikunjaTodoCard extends HTMLElement {
         event.preventDefault();
         saveColumnAlias();
       } else if (event.key === "Escape") {
-        this._columnMenu = undefined;
-        this._render();
+        this._dismissOverlayWithEscape(event);
       }
     });
     root.querySelector(".clear-column-alias")?.addEventListener("click", () => {
@@ -2193,11 +2340,11 @@ class VikunjaTodoCard extends HTMLElement {
     root.querySelector("ha-card")?.addEventListener("click", (event) => {
       if (this._contextMenu && !event.composedPath().some((item) => item?.classList?.contains("context-menu"))) {
         this._contextMenu = undefined;
-        this._render();
+        this._renderPreservingScroll();
       }
       if (this._columnMenu && !event.composedPath().some((item) => item?.classList?.contains("column-context-menu"))) {
         this._columnMenu = undefined;
-        this._render();
+        this._renderPreservingScroll();
       }
     });
     this._applySearchFilter();
@@ -2630,6 +2777,33 @@ class VikunjaTodoCard extends HTMLElement {
     return (parsed.body.textContent ?? "").replace(/\s+/g, " ").trim();
   }
 
+  _descriptionPreview(value) {
+    const text = this._plainText(value);
+    const links = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+    let result = "";
+    let cursor = 0;
+    for (const match of text.matchAll(links)) {
+      result += this._escape(text.slice(cursor, match.index));
+      const markdownLink = Boolean(match[2]);
+      let destination = match[2] || match[3];
+      let label = match[1] || destination;
+      let trailing = "";
+      if (!markdownLink) {
+        while (/[.,;:!?)}\]]$/.test(destination)) {
+          trailing = destination.at(-1) + trailing;
+          destination = destination.slice(0, -1);
+          label = label.slice(0, -1);
+        }
+      }
+      const href = destination.toLowerCase().startsWith("www.")
+        ? `https://${destination}`
+        : destination;
+      result += `<a href="${this._escape(href)}" target="_blank" rel="noopener noreferrer">${this._escape(label)}</a>${this._escape(trailing)}`;
+      cursor = match.index + match[0].length;
+    }
+    return result + this._escape(text.slice(cursor));
+  }
+
   _userName(user) {
     return String(user?.name || user?.username || "").trim();
   }
@@ -2660,6 +2834,14 @@ class VikunjaTodoCard extends HTMLElement {
     return new Intl.DateTimeFormat(this._language(), {
       dateStyle: "medium",
       timeStyle: "short",
+    }).format(date);
+  }
+
+  _formatDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat(this._language(), {
+      dateStyle: "medium",
     }).format(date);
   }
 

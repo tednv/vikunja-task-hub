@@ -237,7 +237,7 @@ entry_id: YOUR_CONFIG_ENTRY_ID
 storage_key: optional-unique-card-key
 ```
 
-`storage_key` controls where the card remembers its last selected project. It contains no token or task content.
+`storage_key` controls where the card remembers its last selected project. It contains no token or task content. Compact or Table mode is shared across Vikunja Task Hub cards in the same browser so dashboard views stay consistent.
 
 The compact view remains the default. Table mode can be selected from the card or configured in YAML:
 

@@ -6,6 +6,23 @@ The project uses semantic versioning. Dates use ISO 8601 format.
 
 ## [Unreleased]
 
+## [0.38.15] - 2026-10-05
+
+### Fixed
+
+- Refresh shared task and timer state when returning to a previously disconnected dashboard view.
+- Show newly created and existing timer controls directly beneath tasks in Table view.
+- Let Escape close the detailed task editor and confirmation dialogs as well as context and view menus.
+- Keep right-click targets in view after Home Assistant's deferred layout and add Escape-key dismissal for task, column, and View Options menus.
+- Preserve page and table scroll positions when opening View Options or column menus by right-click or long press.
+- Restore Table rendering for tasks with due dates and keep desktop view-button clicks separate from touch long-press options.
+- Keep the selected Compact or Table layout consistent across dashboard cards and views while preserving independent project selections.
+- Dismiss open task and column context menus when clicking or tapping empty dashboard space outside the card.
+- Keep a context-menu task visibly highlighted and preserve page and table scrolling while opening or dismissing its menu.
+- Make safe web links in Compact and Table task-description previews directly clickable without opening the task editor.
+- Serialize dashboard and automation due-date updates as timezone-aware RFC 3339 values accepted by current Vikunja releases.
+- Interpret date-only card values and naive automation date-times in Home Assistant's configured timezone, while preserving explicit offsets and allowing due dates to be cleared.
+
 ## [0.38.4] - 2026-08-17
 
 ### Added

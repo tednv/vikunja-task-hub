@@ -52,7 +52,7 @@ Vikunja Task Hub also provides normal Home Assistant actions that can update Vik
 | `vikunja.assign_task_to_me` | Add the authenticated Vikunja user as an assignee |
 | `vikunja.unassign_task_from_me` | Remove the authenticated Vikunja user as an assignee |
 | `vikunja.move_task` | Move a task to another project |
-| `vikunja.set_task_due_date` | Set or clear a due date |
+| `vikunja.set_task_due_date` | Set or clear a due date; naive values use Home Assistant's configured timezone and are sent to Vikunja as RFC 3339 |
 | `vikunja.set_task_priority` | Set priority from unset through do now |
 | `vikunja.add_task_category` | Add an existing category to a task |
 | `vikunja.remove_task_category` | Remove a category without deleting it |
